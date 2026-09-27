@@ -15,7 +15,70 @@ This project was designed to access the 1-Year PUMS data sets for years 2021 thr
 
 ## Functions
 
+Load essential packages and set API key.
+
+```{r}
+#| message: False
+#| warning: False
+
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(ggplot2)
+
+my_key <- "07a32887514d391e8f71d7c20274286c27064b18"
+```
+
 ### 1. Data Processing
+
+**Variable Values**
+
+Pull and parse variable names and values for the PUMS data in a given year.
+
+-   Input: `year` (2021, 2022, 2023, 2024)
+-   Return: `data/vars_yyyy.rda` (as list)
+
+Function:
+
+```{r}
+
+getPUMSVars <- function(year){
+  
+  yearc <- as.character(year)
+  
+  ## Define variables of interest
+  if (yearc %in% c("2021", "2022")) {
+    want <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
+              "HHL", "SCH", "SCHL", "SEX", "ST", "REGION", "DIVISION")
+  } else if (yearc %in% c("2023", "2024")) {
+    want <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
+              "HHL", "SCH", "SCHL", "SEX", "STATE", "REGION", "DIVISION")
+  } else {
+    stop("Invalid year input!")
+  }
+  
+  ## Pull + Parse JSON
+  url <- paste0("https://api.census.gov/data/",yearc,"/acs/acs1/pums/variables.json")
+  pulled  <- GET(url)
+  parsed  <- fromJSON(rawToChar(pulled$content))
+  
+  ## Subset List to Variables of Interest
+  vars <- parsed$variables[want]
+  
+  ## Save to /data as .rds
+  saveRDS(vars, file= paste0("data/vars",yearc,".rds"))
+}
+
+```
+
+Called for all valid years:
+
+```{r}
+getPUMSVars(2021)
+getPUMSVars(2022)
+getPUMSVars(2023)
+getPUMSVars(2024)
+```
 
 ### 2. Data Summarizing
 
