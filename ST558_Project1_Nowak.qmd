@@ -26,8 +26,21 @@ library(httr)
 library(jsonlite)
 library(ggplot2)
 
-my_key <- "07a32887514d391e8f71d7c20274286c27064b18"
 ```
+
+Core R objects, used throughout.
+
+```{r}
+my_key <- "07a32887514d391e8f71d7c20274286c27064b18"
+
+all_years <- c("2021", "2022", "2023", "2024")
+
+all_vars <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
+              "HHL", "SCH", "SCHL", "SEX", "ST", "STATE", "REGION", "DIVISION")
+
+```
+
+
 
 ### 1. Data Processing
 
@@ -45,16 +58,14 @@ Function:
 getPUMSVars <- function(year){
   
   yearc <- as.character(year)
-  
+
   ## Define variables of interest
   if (yearc %in% c("2021", "2022")) {
-    want <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
-              "HHL", "SCH", "SCHL", "SEX", "ST", "REGION", "DIVISION")
+    want <- all_vars[-14]
   } else if (yearc %in% c("2023", "2024")) {
-    want <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
-              "HHL", "SCH", "SCHL", "SEX", "STATE", "REGION", "DIVISION")
+    want <- all_vars[-13]
   } else {
-    stop("Invalid year input!")
+    stop("Invalid year input. Function only accepts 2021-2024")
   }
   
   ## Pull + Parse JSON
@@ -74,11 +85,69 @@ getPUMSVars <- function(year){
 Called for all valid years:
 
 ```{r}
-getPUMSVars(2021)
-getPUMSVars(2022)
-getPUMSVars(2023)
-getPUMSVars(2024)
+#getPUMSVars(2021)
+#getPUMSVars(2022)
+#getPUMSVars(2023)
+#getPUMSVars(2024)
 ```
+
+**API Data Pull**
+
+
+```{r}
+yearc <- "2024"
+nums  <- c("PWGTP", "AGEP", "STATE")
+
+getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats, geo, region) {
+  
+  ## Check YEAR input
+  yearc <- as.character(year)
+  if (!yearc %in% c("2021", "2022", "2023", "2024")) {
+    stop("Invalid year input. Function only accepts 2021-2024.")
+  }
+  
+  ## Check NUMS input
+  nums <- toupper(nums)
+  if (length(nums) == 1 & nums == ("PWGTP")){
+    #At least 1 numeric variable other than PWGTP required.
+    stop("Invalid NUMS input. Must specify one more numeric variable in addition to PWGTP.")
+    
+  } else if (any(!nums %in% all_vars)){
+    #Only variables on the approved list are accepted.
+    #Note: any(not-in) == TRUE when any elements of nums are NOT in the elements of all_vars
+    stop("Invalid NUMS input. At least one requested variable is not on the approved list.")
+    
+  } else if (any(!nums %in% c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP"))) {
+    #Only ~numeric~ variables on the approved list are accepted. Ask user to fix.
+    stop("Invalid NUMS input. At least one requested variable is non-numeric.")
+    
+  } else {
+    
+    #Fix "ST" vs. "STATE" if entered wrong.
+    if(yearc %in% c("2021", "2022") & nums %in% c("STATE")) {
+      nums[which(nums == "STATE")] <- "ST"
+      
+    } else if(yearc %in% c("2023", "2024") & nums %in% c("ST")) {
+      nums[which(nums == "ST")] <- "STATE"
+    }
+    
+    #Ensure PWGTP is on list
+    nums <- c(nums, "PWGTP")
+    nums <- unique(nums)
+  }
+  
+  ## Check CATS input
+  
+  ## Check GEO input
+  
+  ## Check REGION input
+  
+  ## Run API pull via helper function
+  
+}
+
+```
+
 
 ### 2. Data Summarizing
 
