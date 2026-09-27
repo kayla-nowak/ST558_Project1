@@ -4,23 +4,31 @@ author: "Kayla Nowak"
 format: html
 ---
 
-## Quarto
+## Introduction
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+This project builds a set of generalized queries for accessing and summarizing data from the Public Use Microdata Sample (PUMS). PUMS is part of the US Census Bureau's annual American Community Survey.
 
-## Running Code
+-   Data Source: <https://www.census.gov/data/developers/data-sets/census-microdata-api.html>
+-   Variables (from 2024): <https://api.census.gov/data/2024/acs/acs1/pums/variables.html>
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+This project was designed to access the 1-Year PUMS data sets for years 2021 through 2024 only. Additionally, PUMS data for Puerto Rico are not included the scope of this project.
 
-```{r}
-1 + 1
-```
+## Functions
 
-You can add options to executable code like this 
+### 1. Data Processing
 
-```{r}
-#| echo: false
-2 * 2
-```
+### 2. Data Summarizing
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Testing
+
+### With Results Returned
+
+### With Errors/Stop Returned
+
+## Investigation
+
+**Topic**
+
+**Results**
+
+**Discussion**

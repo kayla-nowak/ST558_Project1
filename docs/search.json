@@ -4,20 +4,34 @@
     "href": "ST558_Project1_Nowak.html",
     "title": "ST558 - Project 1",
     "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+    "text": "This project builds a set of generalized queries for accessing and summarizing data from the Public Use Microdata Sample (PUMS). PUMS is part of the US Census Bureau’s annual American Community Survey.\n\nData Source: https://www.census.gov/data/developers/data-sets/census-microdata-api.html\nVariables (from 2024): https://api.census.gov/data/2024/acs/acs1/pums/variables.html\n\nThis project was designed to access the 1-Year PUMS data sets for years 2021 through 2024 only. Additionally, PUMS data for Puerto Rico are not included the scope of this project."
   },
   {
-    "objectID": "ST558_Project1_Nowak.html#quarto",
-    "href": "ST558_Project1_Nowak.html#quarto",
+    "objectID": "ST558_Project1_Nowak.html#introduction",
+    "href": "ST558_Project1_Nowak.html#introduction",
     "title": "ST558 - Project 1",
     "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+    "text": "This project builds a set of generalized queries for accessing and summarizing data from the Public Use Microdata Sample (PUMS). PUMS is part of the US Census Bureau’s annual American Community Survey.\n\nData Source: https://www.census.gov/data/developers/data-sets/census-microdata-api.html\nVariables (from 2024): https://api.census.gov/data/2024/acs/acs1/pums/variables.html\n\nThis project was designed to access the 1-Year PUMS data sets for years 2021 through 2024 only. Additionally, PUMS data for Puerto Rico are not included the scope of this project."
   },
   {
-    "objectID": "ST558_Project1_Nowak.html#running-code",
-    "href": "ST558_Project1_Nowak.html#running-code",
+    "objectID": "ST558_Project1_Nowak.html#functions",
+    "href": "ST558_Project1_Nowak.html#functions",
     "title": "ST558 - Project 1",
-    "section": "Running Code",
-    "text": "Running Code\nWhen you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\n\n1 + 1\n\n[1] 2\n\n\nYou can add options to executable code like this\n\n\n[1] 4\n\n\nThe echo: false option disables the printing of code (only output is displayed)."
+    "section": "Functions",
+    "text": "Functions\n\n1. Data Processing\n\n\n2. Data Summarizing"
+  },
+  {
+    "objectID": "ST558_Project1_Nowak.html#testing",
+    "href": "ST558_Project1_Nowak.html#testing",
+    "title": "ST558 - Project 1",
+    "section": "Testing",
+    "text": "Testing\n\nWith Results Returned\n\n\nWith Errors/Stop Returned"
+  },
+  {
+    "objectID": "ST558_Project1_Nowak.html#investigation",
+    "href": "ST558_Project1_Nowak.html#investigation",
+    "title": "ST558 - Project 1",
+    "section": "Investigation",
+    "text": "Investigation\nTopic\nResults\nDiscussion"
   }
 ]
