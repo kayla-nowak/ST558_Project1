@@ -26,6 +26,7 @@ library(httr)
 library(jsonlite)
 library(ggplot2)
 
+#allow errors to persist with message
 ```
 
 Core R objects, used throughout.
@@ -39,8 +40,6 @@ all_vars <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP", "FER",
               "HHL", "SCH", "SCHL", "SEX", "ST", "STATE", "REGION", "DIVISION")
 
 ```
-
-
 
 ### 1. Data Processing
 
@@ -93,52 +92,70 @@ Called for all valid years:
 
 **API Data Pull**
 
+The `getPUMSData` function ...
+
+-   `year` accepts 2021, 2022, 2023, 2024
+-   `nums` accepts up to two numeric variables: PWGTP, AGEP, GASP, GRPIP, JWAP, JWDP, and/or JWMNP
+    -   if one variable is provided, "PWGTP" is the second variable
+    -   if two variables are provided, "PWGTP" must be one of the two variables
+    -   the default inputs are c("AGEP", "PWGTP")
+-   `cats` accepts one categorical variable: FER, HHL, SCH, SCHL, SEX.
+    -   the default input is "SEX"
+- `geo` accepts one level of geography: REGION, DIVISION, STATE
+    - the default input is "STATE"
+    - note: either "STATE" or "ST" may be used to request state-level geography
 
 ```{r}
-yearc <- "2024"
-nums  <- c("PWGTP", "AGEP", "STATE")
-
-getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats, geo, region) {
+getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats=c("SEX"), geo=c("STATE"), subgeo, ...) {
   
   ## Check YEAR input
   yearc <- as.character(year)
+  
   if (!yearc %in% c("2021", "2022", "2023", "2024")) {
     stop("Invalid year input. Function only accepts 2021-2024.")
   }
   
   ## Check NUMS input
   nums <- toupper(nums)
-  if (length(nums) == 1 & nums == ("PWGTP")){
-    #At least 1 numeric variable other than PWGTP required.
-    stop("Invalid NUMS input. Must specify one more numeric variable in addition to PWGTP.")
-    
-  } else if (any(!nums %in% all_vars)){
-    #Only variables on the approved list are accepted.
-    #Note: any(not-in) == TRUE when any elements of nums are NOT in the elements of all_vars
-    stop("Invalid NUMS input. At least one requested variable is not on the approved list.")
+  if (length(nums) > 2 | (length(nums)==2 & !any(nums == "PWGTP")) ){
+    stop("Invalid NUMS input. Only 1 numeric variable in addition to PWGTP may be requested.")
     
   } else if (any(!nums %in% c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP"))) {
-    #Only ~numeric~ variables on the approved list are accepted. Ask user to fix.
-    stop("Invalid NUMS input. At least one requested variable is non-numeric.")
+    stop("Invalid NUMS input. The requested variable(s) are not on the approved numeric list.")
+  } else if (length(nums==1) & nums == "PWGTP"){
+    stop("Invalid NUMS input. At least 1 numeric variable other than PWGTP must be provided.")
+  } else if (length(nums==1) & nums != "PWGTP"){
+    nums <- c(nums, "PWGTP")
+  }
+  
+  
+  ## Check CATS input
+  cats <- toupper(cats)
+  if (length(cats) > 1){
+    stop("Invalid CATS input. Only 1 categorical variable may be provided.")
+    
+  } else if (!cats %in% c("FER", "HHL", "SCH", "SCHL", "SEX")){
+    stop("Invalid CATS input. The requested variable is not on the approved categorical list.")
+    
+  }
+
+  ## Check GEO input
+  geo <- toupper(geo)
+  if (length(geo) > 1){
+    stop("Invalid GEO input. Only 1 geography variable may be provided.")
+    
+  } else if (!geo %in% c("REGION", "DIVISION", "STATE", "ST")){
+    stop("Invalid GEO input. The requested variable is not on the approved geography list.")
     
   } else {
     
-    #Fix "ST" vs. "STATE" if entered wrong.
-    if(yearc %in% c("2021", "2022") & nums %in% c("STATE")) {
-      nums[which(nums == "STATE")] <- "ST"
-      
-    } else if(yearc %in% c("2023", "2024") & nums %in% c("ST")) {
-      nums[which(nums == "ST")] <- "STATE"
+    #Force "ST" vs. "STATE" if entered wrong.
+    if(yearc %in% c("2021", "2022") & geo=="STATE") {
+      geo <- "ST"
+    } else if(yearc %in% c("2023", "2024") & geo=="ST") {
+      geo <- "STATE"
     }
-    
-    #Ensure PWGTP is on list
-    nums <- c(nums, "PWGTP")
-    nums <- unique(nums)
   }
-  
-  ## Check CATS input
-  
-  ## Check GEO input
   
   ## Check REGION input
   
@@ -148,14 +165,54 @@ getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats, geo, region) {
 
 ```
 
-
 ### 2. Data Summarizing
 
 ## Testing
 
-### With Results Returned
+### getPUMSVars()
 
-### With Errors/Stop Returned
+Expected to fail:
+
+```{r}
+#| error: true
+
+getPUMSVars(2020)  #Invalid year
+getPUMSVars()      #No Year
+```
+
+### getPUMSData()
+
+Expected to work:
+
+
+Expected to fail:
+
+```{r}
+#| error: true
+
+#Invalid Year
+getPUMSData(2020, nums, cats, geo, subgeo)
+
+#Invalid Nums
+getPUMSData(2021, nums=c("AGEP", "GASP"))  #too many inputs
+getPUMSData(2021, nums=c("PWGTP"))         #too few inputs
+getPUMSData(2021, nums=c("STATE"))         #unapproved var
+getPUMSData(2021, nums=c("STATE","PWGTP")) #unapproved var
+
+#Invalid Cats
+getPUMSData(2021, nums=c("AGEP"), cats=c("SEX","FER"))  #too many inputs
+getPUMSData(2021, nums=c("AGEP"), cats=c("STATE"))      #unapproved var
+
+#Invalid Geo
+getPUMSData(2021, nums=c("AGEP"), geo=c("STATE","REGION"))  #too many inputs
+getPUMSData(2021, nums=c("AGEP"), geo=c("STA"))             #unapproved var
+
+#Invalid Subgeo
+
+
+```
+
+
 
 ## Investigation
 
