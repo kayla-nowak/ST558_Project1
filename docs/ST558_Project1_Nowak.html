@@ -214,80 +214,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>API Data Pull</strong></p>
 <p>The <code>getPUMSData</code> function …</p>
 <ul>
-<li><code>year</code> accepts 2021, 2022, 2023, 2024</li>
-<li><code>nums</code> accepts up to two numeric variables: PWGTP, AGEP, GASP, GRPIP, JWAP, JWDP, and/or JWMNP
+<li><p><code>year</code> accepts 2021, 2022, 2023, 2024</p></li>
+<li><p><code>nums</code> accepts up to two numeric variables: PWGTP, AGEP, GASP, GRPIP, JWAP, JWDP, and/or JWMNP</p>
 <ul>
 <li>if one variable is provided, “PWGTP” is the second variable</li>
 <li>if two variables are provided, “PWGTP” must be one of the two variables</li>
 <li>the default inputs are c(“AGEP”, “PWGTP”)</li>
 </ul></li>
-<li><code>cats</code> accepts one categorical variable: FER, HHL, SCH, SCHL, SEX.
+<li><p><code>cats</code> accepts one categorical variable: FER, HHL, SCH, SCHL, SEX.</p>
 <ul>
 <li>the default input is “SEX”</li>
 </ul></li>
-<li><code>geo</code> accepts one level of geography: REGION, DIVISION, STATE
+<li><p><code>geo</code> accepts one level of geography: REGION, DIVISION, STATE</p>
 <ul>
 <li>the default input is “STATE”</li>
 <li>note: either “STATE” or “ST” may be used to request state-level geography</li>
 </ul></li>
+<li><p><code>subgeo</code> accepts one sub-level of geography:</p>
+<ul>
+<li>Regions: Northeast, Puerto Rico, South, Midwest, West. <em>Default = Northeast</em></li>
+<li>Division: West South Central (South Region), Middle Atlantic (Northeast region), West North Central (Midwest region), East South Central (South region), East North Central (Midwest region), Pacific (West region), Puerto Rico, South Atlantic (South region), Mountain (West region), New England (Northeast region). <em>Default = New England (Northeast region)</em></li>
+<li>State: written as “State Name/XX” where XX is the two-letter abbreviation. <em>Default = District of Columbia/DC</em></li>
+</ul></li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>getPUMSData <span class="ot">&lt;-</span> <span class="cf">function</span>(year, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>,<span class="st">"PWGTP"</span>), <span class="at">cats=</span><span class="fu">c</span>(<span class="st">"SEX"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), subgeo, ...) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Check YEAR input</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  yearc <span class="ot">&lt;-</span> <span class="fu">as.character</span>(year)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>, <span class="st">"2023"</span>, <span class="st">"2024"</span>)) {</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid year input. Function only accepts 2021-2024."</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>getPUMSData <span class="ot">&lt;-</span> <span class="cf">function</span>(year, </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>,<span class="st">"PWGTP"</span>), </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">cats=</span><span class="fu">c</span>(<span class="st">"SEX"</span>), </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">subgeo=</span><span class="cn">NULL</span>, ...) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="do">## YEAR</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  yearc <span class="ot">&lt;-</span> <span class="fu">as.character</span>(year)</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Check NUMS input</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  nums <span class="ot">&lt;-</span> <span class="fu">toupper</span>(nums)</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(nums) <span class="sc">&gt;</span> <span class="dv">2</span> <span class="sc">|</span> (<span class="fu">length</span>(nums)<span class="sc">==</span><span class="dv">2</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">any</span>(nums <span class="sc">==</span> <span class="st">"PWGTP"</span>)) ){</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. Only 1 numeric variable in addition to PWGTP may be requested."</span>)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">any</span>(<span class="sc">!</span>nums <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>, <span class="st">"PWGTP"</span>))) {</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. The requested variable(s) are not on the approved numeric list."</span>)</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(nums<span class="sc">==</span><span class="dv">1</span>) <span class="sc">&amp;</span> nums <span class="sc">==</span> <span class="st">"PWGTP"</span>){</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. At least 1 numeric variable other than PWGTP must be provided."</span>)</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(nums<span class="sc">==</span><span class="dv">1</span>) <span class="sc">&amp;</span> nums <span class="sc">!=</span> <span class="st">"PWGTP"</span>){</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    nums <span class="ot">&lt;-</span> <span class="fu">c</span>(nums, <span class="st">"PWGTP"</span>)</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Check CATS input</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  cats <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cats)</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cats) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CATS input. Only 1 categorical variable may be provided."</span>)</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>cats <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)){</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CATS input. The requested variable is not on the approved categorical list."</span>)</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Check GEO input</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  geo <span class="ot">&lt;-</span> <span class="fu">toupper</span>(geo)</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(geo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. Only 1 geography variable may be provided."</span>)</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>, <span class="st">"STATE"</span>, <span class="st">"ST"</span>)){</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. The requested variable is not on the approved geography list."</span>)</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Force "ST" vs. "STATE" if entered wrong.</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"ST"</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2023"</span>, <span class="st">"2024"</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"ST"</span>) {</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"STATE"</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Check REGION input</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Run API pull via helper function</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>, <span class="st">"2023"</span>, <span class="st">"2024"</span>)) {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid year input. Function only accepts 2021-2024."</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="do">## NUMS</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  nums <span class="ot">&lt;-</span> <span class="fu">toupper</span>(nums)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(nums) <span class="sc">&gt;</span> <span class="dv">2</span> <span class="sc">|</span> (<span class="fu">length</span>(nums)<span class="sc">==</span><span class="dv">2</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">any</span>(nums <span class="sc">==</span> <span class="st">"PWGTP"</span>)) ){</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. Only 1 numeric variable in addition to PWGTP may be requested."</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">any</span>(<span class="sc">!</span>nums <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>, <span class="st">"PWGTP"</span>))) {</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. The requested variable(s) are not on the approved numeric list."</span>)</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(nums<span class="sc">==</span><span class="dv">1</span>) <span class="sc">&amp;</span> nums <span class="sc">==</span> <span class="st">"PWGTP"</span>){</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUMS input. At least 1 numeric variable other than PWGTP must be provided."</span>)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(nums<span class="sc">==</span><span class="dv">1</span>) <span class="sc">&amp;</span> nums <span class="sc">!=</span> <span class="st">"PWGTP"</span>){</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Automatically include PWGTP on a single-input request</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    nums <span class="ot">&lt;-</span> <span class="fu">c</span>(nums, <span class="st">"PWGTP"</span>)</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="do">## CATS </span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  cats <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cats)</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cats) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CATS input. Only 1 categorical variable may be provided."</span>)</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>cats <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)){</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CATS input. The requested variable is not on the approved categorical list."</span>)</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>  <span class="do">## GEO</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>  geo <span class="ot">&lt;-</span> <span class="fu">toupper</span>(geo)</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(geo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. Only 1 geography variable may be provided."</span>)</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>, <span class="st">"STATE"</span>, <span class="st">"ST"</span>)){</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. The requested variable is not on the approved geography list."</span>)</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Force "ST" vs. "STATE" if entered wrong.</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"ST"</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2023"</span>, <span class="st">"2024"</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"ST"</span>) {</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"STATE"</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>  <span class="do">## SUBGEO</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Grab year-specific valid inputs</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>  vars <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(<span class="st">"data/vars"</span>,yearc,<span class="st">".rds"</span>))</span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>  subR <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>REGION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>  subD <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>DIVISION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>)) { </span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>STATE<span class="sc">$</span>values<span class="sc">$</span>item) </span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(subgeo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. Only 1 sub-geography variable may be provided."</span>)</span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (geo<span class="sc">==</span><span class="st">"REGION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subR) {</span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = REGION. Note: this field is case-sensitive."</span>)</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subD){</span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = DIVISION Note: this field is case-sensitive."</span>)</span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>) <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subS){</span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = STATE Note: this field is case-sensitive."</span>)</span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"REGION"</span>) {</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    subgeo <span class="ot">&lt;-</span> <span class="st">"Northeast"</span>  <span class="co">#set default </span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"DIVISION"</span>) {</span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"New England (Northeast region)"</span>  <span class="co">#set default </span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>)) {</span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"District of Columbia/DC"</span>  <span class="co">#set default </span></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Run API pull via helper function</span></span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data-summarizing" class="level3">
@@ -355,7 +407,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(2021, nums = c("AGEP"), geo = c("STA")): Invalid GEO input. The requested variable is not on the approved geography list.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>, <span class="st">"DC"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in getPUMSData(2021, nums = c("AGEP"), geo = c("STATE"), subgeo = c("NC", : Invalid SUBGEO input. Only 1 sub-geography variable may be provided.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>))        <span class="co">#invalid inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in getPUMSData(2021, nums = c("AGEP"), geo = c("STATE"), subgeo = c("NC")): Invalid SUBGEO input. The provided phrase is invalid for geo = STATE Note: this field is case-sensitive.</code></pre>
+</div>
 </div>
 </section>
 </section>

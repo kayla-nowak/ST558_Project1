@@ -95,28 +95,47 @@ Called for all valid years:
 The `getPUMSData` function ...
 
 -   `year` accepts 2021, 2022, 2023, 2024
+
 -   `nums` accepts up to two numeric variables: PWGTP, AGEP, GASP, GRPIP, JWAP, JWDP, and/or JWMNP
+
     -   if one variable is provided, "PWGTP" is the second variable
     -   if two variables are provided, "PWGTP" must be one of the two variables
     -   the default inputs are c("AGEP", "PWGTP")
+
 -   `cats` accepts one categorical variable: FER, HHL, SCH, SCHL, SEX.
+
     -   the default input is "SEX"
-- `geo` accepts one level of geography: REGION, DIVISION, STATE
-    - the default input is "STATE"
-    - note: either "STATE" or "ST" may be used to request state-level geography
+
+-   `geo` accepts one level of geography: REGION, DIVISION, STATE
+
+    -   the default input is "STATE"
+    -   note: either "STATE" or "ST" may be used to request state-level geography
+
+-   `subgeo` accepts one sub-level of geography:
+
+    -   Regions: Northeast, Puerto Rico, South, Midwest, West. *Default = Northeast*
+    -   Division: West South Central (South Region), Middle Atlantic (Northeast region), West North Central (Midwest region), East South Central (South region), East North Central (Midwest region), Pacific (West region), Puerto Rico, South Atlantic (South region), Mountain (West region), New England (Northeast region). *Default = New England (Northeast region)*
+    -   State: written as "State Name/XX" where XX is the two-letter abbreviation. *Default = District of Columbia/DC*
 
 ```{r}
-getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats=c("SEX"), geo=c("STATE"), subgeo, ...) {
+getPUMSData <- function(year, 
+                        nums=c("AGEP","PWGTP"), 
+                        cats=c("SEX"), 
+                        geo=c("STATE"), 
+                        subgeo=NULL, ...) {
   
-  ## Check YEAR input
+  ## YEAR
   yearc <- as.character(year)
   
+  #Check validity
   if (!yearc %in% c("2021", "2022", "2023", "2024")) {
     stop("Invalid year input. Function only accepts 2021-2024.")
   }
   
-  ## Check NUMS input
+  ## NUMS
   nums <- toupper(nums)
+  
+  #Check validity
   if (length(nums) > 2 | (length(nums)==2 & !any(nums == "PWGTP")) ){
     stop("Invalid NUMS input. Only 1 numeric variable in addition to PWGTP may be requested.")
     
@@ -125,12 +144,14 @@ getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats=c("SEX"), geo=c("STAT
   } else if (length(nums==1) & nums == "PWGTP"){
     stop("Invalid NUMS input. At least 1 numeric variable other than PWGTP must be provided.")
   } else if (length(nums==1) & nums != "PWGTP"){
+    #Automatically include PWGTP on a single-input request
     nums <- c(nums, "PWGTP")
   }
   
-  
-  ## Check CATS input
+  ## CATS 
   cats <- toupper(cats)
+  
+  #Check validity
   if (length(cats) > 1){
     stop("Invalid CATS input. Only 1 categorical variable may be provided.")
     
@@ -139,8 +160,10 @@ getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats=c("SEX"), geo=c("STAT
     
   }
 
-  ## Check GEO input
+  ## GEO
   geo <- toupper(geo)
+  
+  #Check validity
   if (length(geo) > 1){
     stop("Invalid GEO input. Only 1 geography variable may be provided.")
     
@@ -157,7 +180,42 @@ getPUMSData <- function(year, nums=c("AGEP","PWGTP"), cats=c("SEX"), geo=c("STAT
     }
   }
   
-  ## Check REGION input
+  ## SUBGEO
+  
+  #Grab year-specific valid inputs
+  vars <- readRDS(paste0("data/vars",yearc,".rds"))
+  subR <- unlist(vars$REGION$values$item)
+  subD <- unlist(vars$DIVISION$values$item)
+  if(yearc %in% c("2021", "2022")) { 
+    subS <- unlist(vars$ST$values$item)
+  } else {
+    subS <- unlist(vars$STATE$values$item) 
+  }
+  
+  #Check validity
+  if (length(subgeo) > 1){
+    stop("Invalid SUBGEO input. Only 1 sub-geography variable may be provided.")
+    
+  } else if (geo=="REGION" & !subgeo %in% subR) {
+    stop("Invalid SUBGEO input. The provided phrase is invalid for geo = REGION. Note: this field is case-sensitive.")
+    
+  } else if(geo=="DIVISION" & !subgeo %in% subD){
+    stop("Invalid SUBGEO input. The provided phrase is invalid for geo = DIVISION Note: this field is case-sensitive.")
+      
+  } else if(geo %in% c("STATE", "ST") & !subgeo %in% subS){
+    stop("Invalid SUBGEO input. The provided phrase is invalid for geo = STATE Note: this field is case-sensitive.")
+      
+  } else if (is.null(subgeo) & geo=="REGION") {
+    subgeo <- "Northeast"  #set default 
+    
+  } else if(is.null(subgeo) & geo=="DIVISION") {
+     subgeo <- "New England (Northeast region)"  #set default 
+   
+  } else if(is.null(subgeo) & geo %in% c("STATE", "ST")) {
+     subgeo <- "District of Columbia/DC"  #set default 
+   
+  }
+  
   
   ## Run API pull via helper function
   
@@ -184,7 +242,6 @@ getPUMSVars()      #No Year
 
 Expected to work:
 
-
 Expected to fail:
 
 ```{r}
@@ -208,11 +265,10 @@ getPUMSData(2021, nums=c("AGEP"), geo=c("STATE","REGION"))  #too many inputs
 getPUMSData(2021, nums=c("AGEP"), geo=c("STA"))             #unapproved var
 
 #Invalid Subgeo
-
+getPUMSData(2021, nums=c("AGEP"), geo=c("STATE"), subgeo=c("NC", "DC"))  #too many inputs
+getPUMSData(2021, nums=c("AGEP"), geo=c("STATE"), subgeo=c("NC"))        #invalid inputs
 
 ```
-
-
 
 ## Investigation
 
