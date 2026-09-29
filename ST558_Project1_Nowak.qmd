@@ -110,6 +110,7 @@ getFromAPI <- function(year, num, cat, geo, subgeo){
   parsed <- fromJSON(rawToChar(pulled$content))
   
   ##REMOVE SCHL=24 later
+  ##ADD subgeo later
   
 }
 ```
@@ -228,20 +229,59 @@ The `getPUMSData` function ...
 
 
 ```{r}
-getPUMSData <- function(year, num, cat="SEX", geo="STATE", subgeo="ALL", ...){
+getPUMSData <- function(year=2021, num="AGEP", cat="SEX", geo="STATE", subgeo="ALL"){
   
   ## CHECK FOR VALID INPUTS
-  #--ADD THESE BACK LATER--
   
+  #year::
+  if (!year %in% c(2021, 2022, 2023, 2024)){
+    stop("Invalid YEAR input. Function only accepts 2021-2024.")
+  }
+  
+  #num::
+  num <- toupper(num)
+  if (length(num)>1) {
+    stop("Invalid NUM input. Only 1 variable permitted - PWGTP is automatically included.")
+  } else if(num=="PWGTP"){
+    stop("Invalid NUM input. PWGTP is automatically included, a different numeric variable is required.")
+  } else if(any(!num %in% all_nums)){
+    stop("Invalid NUM input. The requested variable is not on the approved list of numeric variables.")
+  }
+  
+  #cat::
+  cat <-toupper(cat)
+  if (length(cat)>1) {
+    stop("Invalid CAT input. Only 1 variable permitted.")
+  } else if(any(!cat %in% all_cats)){
+    stop("Invalid CAT input. The requested variable is not on the approved list of categorical variables.")
+  }
+  
+  #geo::
+  geo <- toupper(geo)
+  if (length(geo) > 1){
+    stop("Invalid GEO input. Only 1 geography variable may be provided.")
+  } else if (!geo %in% c("REGION", "DIVISION", "STATE", "ST")){
+    stop("Invalid GEO input. The requested variable is not on the approved geography list.")
+  } else { #Correct ST vs. STATE if entered incorrectly
+    if(year %in% c(2021, 2022) & geo=="STATE") {
+      geo <- "ST"
+    } else if(year %in% c(2023, 2024) & geo=="ST") {
+      geo <- "STATE"
+    }
+  }
+  
+  #subgeo::
+  
+
+
   ## RUN API PULL FUNCTION
-  parsed <- getFromAPI(year, num, cat, geo, subgeo)
+  parsed <- getFromAPI(year, num, cat, geo) #subgeo
 
   ## RUN TIDY FUNCTION
   tdata  <- makeTidy(parsed)
   
   ## RUN CLEANING FUNCTIONS
   dictionary <- readRDS(paste0("data/vars",as.character(year),".rds"))
-  
   tdata <- cleanCat(tdata,dictionary,cat)
   tdata <- cleanNum(tdata,dictionary,num)
   tdata <- cleanGeo(tdata,dictionary,geo)
@@ -252,14 +292,49 @@ getPUMSData <- function(year, num, cat="SEX", geo="STATE", subgeo="ALL", ...){
 
 ### Testing
 
-```{r}
-wip <- getPUMSData(year=2024, num="GASP", cat="HHL", geo="STATE", subgeo="ALL")
 
-#Check results
-wip
-str(wip)
-wip |> count(GASP)
+Example data pull using the `getPUMSData()` function, default inputs:
+
+```{r}
+#test <- getPUMSData(year=2021) ##REVISIT lexical error in json text
 ```
+
+Example data pull using the `getPUMSData()` function, custom inputs
+
+```{r}
+test <- getPUMSData(year=2024, num="GASP", cat="HHL", geo="REGION", subgeo="ALL")
+str(test)
+```
+
+Expected to fail (`getPUMSData`):
+
+```{r}
+#| error: true
+
+#Invalid Nums
+getPUMSData(num=c("AGEP", "GASP"))  #too many inputs
+getPUMSData(num=c("PWGTP"))         #too few inputs
+getPUMSData(num=c("STATE"))         #unapproved var
+
+#Invalid Cats
+getPUMSData(cat=c("SEX","FER"))  #too many inputs
+getPUMSData(cat=c("STATE"))      #unapproved var
+
+#Invalid Geo
+getPUMSData(geo=c("STATE","REGION"))  #too many inputs
+getPUMSData(geo=c("STA"))             #unapproved var
+```
+
+Expected to fail (`getPUMSVars`):
+
+```{r}
+#| error: true
+
+getPUMSVars(2020)  #Invalid year
+getPUMSVars()      #No Year
+```
+
+
 
 
 
@@ -275,61 +350,7 @@ input_checks <- function(year,
                         geo=c("STATE"), 
                         subgeo=NULL, ...) {
   
-  ## YEAR
-  yearc <- as.character(year)
-  
-  #Check validity
-  if (!yearc %in% c("2021", "2022", "2023", "2024")) {
-    stop("Invalid year input. Function only accepts 2021-2024.")
-  }
-  
-  ## NUMS
-  nums <- toupper(nums)
-  
-  #Check validity
-  if (length(nums) > 2 | (length(nums)==2 & !any(nums == "PWGTP")) ){
-    stop("Invalid NUMS input. Only 1 numeric variable in addition to PWGTP may be requested.")
-    
-  } else if (any(!nums %in% c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP"))) {
-    stop("Invalid NUMS input. The requested variable(s) are not on the approved numeric list.")
-  } else if (length(nums==1) & nums == "PWGTP"){
-    stop("Invalid NUMS input. At least 1 numeric variable other than PWGTP must be provided.")
-  } else if (length(nums==1) & nums != "PWGTP"){
-    #Automatically include PWGTP on a single-input request
-    nums <- c(nums, "PWGTP")
-  }
-  
-  ## CATS 
-  cats <- toupper(cats)
-  
-  #Check validity
-  if (length(cats) > 1){
-    stop("Invalid CATS input. Only 1 categorical variable may be provided.")
-    
-  } else if (!cats %in% c("FER", "HHL", "SCH", "SCHL", "SEX")){
-    stop("Invalid CATS input. The requested variable is not on the approved categorical list.")
-    
-  }
 
-  ## GEO
-  geo <- toupper(geo)
-  
-  #Check validity
-  if (length(geo) > 1){
-    stop("Invalid GEO input. Only 1 geography variable may be provided.")
-    
-  } else if (!geo %in% c("REGION", "DIVISION", "STATE", "ST")){
-    stop("Invalid GEO input. The requested variable is not on the approved geography list.")
-    
-  } else {
-    
-    #Force "ST" vs. "STATE" if entered wrong.
-    if(yearc %in% c("2021", "2022") & geo=="STATE") {
-      geo <- "ST"
-    } else if(yearc %in% c("2023", "2024") & geo=="ST") {
-      geo <- "STATE"
-    }
-  }
   
   ## SUBGEO
   
@@ -370,55 +391,22 @@ input_checks <- function(year,
 }
 
 ```
-
-## Data Summarizing Functions
-
-## Testing
-
-### getPUMSVars()
-
 Expected to fail:
 
 ```{r}
 #| eval: false
 #| error: true
-
-getPUMSVars(2020)  #Invalid year
-getPUMSVars()      #No Year
-```
-
-### getPUMSData()
-
-Expected to work:
-
-Expected to fail:
-
-```{r}
-#| eval: false
-#| error: true
-
-#Invalid Year
-getPUMSData(2020, nums, cats, geo, subgeo)
-
-#Invalid Nums
-getPUMSData(2021, nums=c("AGEP", "GASP"))  #too many inputs
-getPUMSData(2021, nums=c("PWGTP"))         #too few inputs
-getPUMSData(2021, nums=c("STATE"))         #unapproved var
-getPUMSData(2021, nums=c("STATE","PWGTP")) #unapproved var
-
-#Invalid Cats
-getPUMSData(2021, nums=c("AGEP"), cats=c("SEX","FER"))  #too many inputs
-getPUMSData(2021, nums=c("AGEP"), cats=c("STATE"))      #unapproved var
-
-#Invalid Geo
-getPUMSData(2021, nums=c("AGEP"), geo=c("STATE","REGION"))  #too many inputs
-getPUMSData(2021, nums=c("AGEP"), geo=c("STA"))             #unapproved var
 
 #Invalid Subgeo
 getPUMSData(2021, nums=c("AGEP"), geo=c("STATE"), subgeo=c("NC", "DC"))  #too many inputs
 getPUMSData(2021, nums=c("AGEP"), geo=c("STATE"), subgeo=c("NC"))        #invalid inputs
 
 ```
+
+## Data Summarizing Functions
+
+
+
 
 ## Investigation
 
