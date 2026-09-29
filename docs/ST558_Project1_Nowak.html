@@ -140,8 +140,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
 <p>This project builds a set of generalized queries for accessing and summarizing data from the Public Use Microdata Sample (PUMS). PUMS is part of the US Census Bureau’s annual American Community Survey.</p>
 <ul>
 <li>Data Source: <a href="https://www.census.gov/data/developers/data-sets/census-microdata-api.html" class="uri">https://www.census.gov/data/developers/data-sets/census-microdata-api.html</a></li>
@@ -149,8 +149,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>This project was designed to access the 1-Year PUMS data sets for years 2021 through 2024 only. Additionally, PUMS data for Puerto Rico are not included the scope of this project.</p>
 </section>
-<section id="data-processing-functions" class="level2">
-<h2 class="anchored" data-anchor-id="data-processing-functions">Data Processing Functions</h2>
+<section id="data-processing-functions" class="level1">
+<h1>Data Processing Functions</h1>
 <p>Load essential packages and set API key.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
@@ -168,9 +168,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>all_cats <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>all_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PWGTP"</span>, all_nums, all_cats, <span class="st">"ST"</span>, <span class="st">"STATE"</span>, <span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="variable-values" class="level3">
-<h3 class="anchored" data-anchor-id="variable-values">Variable Values</h3>
-<p>Pull and parse variable names and values for the PUMS data in a given year.</p>
+<section id="variable-values" class="level2">
+<h2 class="anchored" data-anchor-id="variable-values">Variable Values</h2>
+<p><code>getPUMSVars()</code> pulls and parses variable names and values for the PUMS data in a given year.</p>
+<p>One year-specific .rda file is returned, and this file is saved in the repository’s <code>/data</code> folder for future access. Later functions reference these .rda files when defining the <code>dictionary</code>.</p>
 <ul>
 <li>Input: <code>year</code> (2021, 2022, 2023, 2024)</li>
 <li>Return: <code>data/vars_yyyy.rda</code> (as list)</li>
@@ -211,16 +212,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#getPUMSVars(2024)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="api-pull-helpers" class="level3">
-<h3 class="anchored" data-anchor-id="api-pull-helpers">API Pull: Helpers</h3>
+<section id="api-pull-helpers" class="level2">
+<h2 class="anchored" data-anchor-id="api-pull-helpers">API Pull: Helpers</h2>
 <p>The following helper functions perform dedicated tasks and are called within the main, wrapper function (<code>getPUMSData</code> defined later).</p>
-<p><code>getFromAPI()</code> queries the Census API for PUMAS data and returns a matrix of the requested data.</p>
+<section id="getfromapi" class="level3">
+<h3 class="anchored" data-anchor-id="getfromapi"><code>getFromAPI()</code></h3>
+<p>This function queries the Census API for PUMAS data and returns a matrix of the requested data.</p>
 <ul>
-<li>Input: query parameters, as given to the main/wrapper function.</li>
+<li>Input: all query parameters, as given to the main/wrapper function.</li>
 <li>Return: a matrix</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>getFromAPI <span class="ot">&lt;-</span> <span class="cf">function</span>(year, num, cat, geo, subgeo){</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>getFromAPI <span class="ot">&lt;-</span> <span class="cf">function</span>(year, num, cat, geo, subgeo,...){</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  q <span class="ot">&lt;-</span> <span class="fu">paste</span>(cat, <span class="st">"PWGTP"</span>, num, <span class="at">sep=</span><span class="st">","</span>) </span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>,<span class="fu">as.character</span>(year),</span>
@@ -236,13 +239,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><code>makeTidy()</code> converts the requested data to a tibble with meaningful column names.</p>
+</section>
+<section id="maketidy" class="level3">
+<h3 class="anchored" data-anchor-id="maketidy"><code>makeTidy()</code></h3>
+<p>This function converts the requested data to a tibble with meaningful column names.</p>
 <ul>
 <li>Input: a matrix generated by <code>getFromAPI</code></li>
 <li>Return: a tibble</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>makeTidy <span class="ot">&lt;-</span> <span class="cf">function</span>(parsed){</span>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>makeTidy <span class="ot">&lt;-</span> <span class="cf">function</span>(parsed,...){</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Get colnames from 1st row</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(parsed) <span class="ot">&lt;-</span> parsed[<span class="dv">1</span>,]</span>
@@ -252,13 +258,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">PWGTP=</span><span class="fu">as.numeric</span>(PWGTP))</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><code>cleanCat()</code> converts the requested categorical variable to a factor, based on the relevant data dictionary stored in /data.</p>
+</section>
+<section id="cleancat" class="level3">
+<h3 class="anchored" data-anchor-id="cleancat"><code>cleanCat()</code></h3>
+<p>This function converts the requested categorical variable to a factor, based on the relevant data dictionary stored in <code>/data</code>.</p>
 <ul>
-<li>Input: a tibble generated by makeTidy, the data dictionary, and the cat user input</li>
+<li>Input: a tibble generated by <code>makeTidy</code>, the data dictionary, and the <code>cat</code> user input</li>
 <li>Return: an updated tibble</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cleanCat <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,cat){</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cleanCat <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,cat,...){</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Store variable labels</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  lookup <span class="ot">&lt;-</span> <span class="fu">unlist</span>(dictionary[[cat]]<span class="sc">$</span>values<span class="sc">$</span>item)</span>
@@ -278,63 +287,100 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><code>cleanNum()</code> converts the requested 2nd numeric variable to a number or derived midpoint time, based on the relevant data dictionary stored in /data.</p>
+</section>
+<section id="cleantime" class="level3">
+<h3 class="anchored" data-anchor-id="cleantime"><code>cleanTime()</code></h3>
+<p>This is a helper function called within the <code>cleanNum</code> helper function (defined next). It converts the timing variables (JWAP and JWDP) from a time period (HH:MM to HH:MM) to a derived midpoint time. The resulting midpoint time is stored as R numeric data with the 12-hour time format (<code>I:M p</code>).</p>
 <ul>
-<li>Input: a tibble generated by makeTidy, the data dictionary, and the num user input</li>
-<li>Return: an updated tibble</li>
+<li>Input: the <code>num</code> user input; only use with JWAP or JWDP</li>
+<li>Return: a vector</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cleanNum <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,num){</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Store variable labels</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  lookup <span class="ot">&lt;-</span> <span class="fu">unlist</span>(dictionary[[num]]<span class="sc">$</span>values<span class="sc">$</span>item)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Apply labels and levels</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"AGEP"</span>) {</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">AGEP =</span> <span class="fu">as.numeric</span>(AGEP))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"GASP"</span>){</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">GASP =</span> <span class="fu">as.numeric</span>(GASP), </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                             <span class="at">GASP =</span> <span class="fu">ifelse</span>(GASP<span class="sc">==</span><span class="dv">3</span>,<span class="cn">NA</span>,GASP)) <span class="co">#set coded missing to zero</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"GRPIP"</span>){</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">GRPIP =</span> <span class="fu">as.numeric</span>(GRPIP))</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWAP"</span>){</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWAP =</span> <span class="fu">factor</span>(JWAP, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWDP"</span>){</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWDP =</span> <span class="fu">factor</span>(JWDP, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWMNP"</span>) {</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWMNP =</span> <span class="fu">as.numeric</span>(JWMNP))</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  } </span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="do">##COME BACK FOR TIME CLEANING! </span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p><code>cleanGeo()</code> converts the requested geographic variable to a factor based on the relevant data dictionary stored in /data.</p>
-<ul>
-<li>Input: a tibble generated by makeTidy, the data dictionary, and the geo user input</li>
-<li>Return: an updated tibble</li>
-</ul>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cleanGeo <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,geo){</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Store variable labels</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  lookup <span class="ot">&lt;-</span> <span class="fu">unlist</span>(dictionary[[geo]]<span class="sc">$</span>values<span class="sc">$</span>item)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Apply labels and levels</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">factor</span>(state, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"ST"</span>){</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">st =</span> <span class="fu">factor</span>(st, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"REGION"</span>){</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">region =</span> <span class="fu">factor</span>(region, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span>){</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">division =</span> <span class="fu">factor</span>(division, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cleanTime <span class="ot">&lt;-</span> <span class="cf">function</span>(num,...){</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  tvar <span class="ot">&lt;-</span> <span class="fu">as.character</span>(num)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Split character times into vector with 2 elements</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  split <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(tvar, <span class="st">" to "</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Strip "." for lubridate</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  split2 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">""</span>, split)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Convert to numeric time with lubridate:</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  nt1 <span class="ot">&lt;-</span> lubridate<span class="sc">::</span><span class="fu">parse_date_time</span>(split2[<span class="dv">1</span>], <span class="at">orders =</span> <span class="st">"I:M p"</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  nt2 <span class="ot">&lt;-</span> lubridate<span class="sc">::</span><span class="fu">parse_date_time</span>(split2[<span class="dv">1</span>], <span class="at">orders =</span> <span class="st">"I:M p"</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Calculate midpoint (numeric)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  mpt <span class="ot">&lt;-</span> <span class="fu">format</span>(nt1 <span class="sc">+</span> (nt2<span class="sc">-</span>nt1)<span class="sc">/</span><span class="dv">2</span>, <span class="st">"%I:%M %p"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(mpt)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="api-pull-main" class="level3">
-<h3 class="anchored" data-anchor-id="api-pull-main">API Pull: Main</h3>
+<section id="cleannum" class="level3">
+<h3 class="anchored" data-anchor-id="cleannum"><code>cleanNum()</code></h3>
+<p>This function converts the requested numeric variable to a number or derived midpoint time, based on the relevant data dictionary stored in <code>/data</code>.</p>
+<ul>
+<li>Input: a tibble generated by <code>makeTidy</code>, the data dictionary, and the <code>num</code> user input</li>
+<li>Return: an updated tibble</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cleanNum <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,num,...){</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Store variable labels</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  lookup <span class="ot">&lt;-</span> <span class="fu">unlist</span>(dictionary[[num]]<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Apply labels and levels</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"AGEP"</span>) {</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">AGEP =</span> <span class="fu">as.numeric</span>(AGEP))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"GASP"</span>){</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">GASP =</span> <span class="fu">as.numeric</span>(GASP), </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                             <span class="at">GASP =</span> <span class="fu">ifelse</span>(GASP<span class="sc">==</span><span class="dv">3</span>,<span class="cn">NA</span>,GASP)) <span class="co">#set coded missing to zero</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"GRPIP"</span>){</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">GRPIP =</span> <span class="fu">as.numeric</span>(GRPIP))</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWAP"</span>){</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWAP =</span> <span class="fu">factor</span>(JWAP, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup),</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                             )<span class="co">#JWAP = cleanTime(JWAP))</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWDP"</span>){</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWDP =</span> <span class="fu">factor</span>(JWDP, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup),</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                             )<span class="co">#JWDP = cleanTime(JWDP))</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"JWMNP"</span>) {</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">JWMNP =</span> <span class="fu">as.numeric</span>(JWMNP))</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  } </span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cleangeo" class="level3">
+<h3 class="anchored" data-anchor-id="cleangeo"><code>cleanGeo()</code></h3>
+<p>This function converts the requested geographic variable to a factor based on the relevant data dictionary stored in <code>/data</code>.</p>
+<ul>
+<li>Input: a tibble generated by <code>makeTidy</code>, the data dictionary, and the <code>geo</code> user input</li>
+<li>Return: an updated tibble</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cleanGeo <span class="ot">&lt;-</span> <span class="cf">function</span>(tdata,dictionary,geo,...){</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Store variable labels</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  lookup <span class="ot">&lt;-</span> <span class="fu">unlist</span>(dictionary[[geo]]<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Apply labels and levels</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">factor</span>(state, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"ST"</span>){</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">st =</span> <span class="fu">factor</span>(st, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"REGION"</span>){</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">region =</span> <span class="fu">factor</span>(region, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span>){</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">division =</span> <span class="fu">factor</span>(division, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="api-pull-main" class="level2">
+<h2 class="anchored" data-anchor-id="api-pull-main">API Pull: Main</h2>
 <p>The <code>getPUMSData</code> function …</p>
 <ul>
 <li><code>year</code> accepts 2021, 2022, 2023, 2024</li>
@@ -350,193 +396,193 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>subgeo</code> accepts one sub-level of geography:</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>getPUMSData <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year=</span><span class="dv">2021</span>, <span class="at">num=</span><span class="st">"AGEP"</span>, <span class="at">cat=</span><span class="st">"SEX"</span>, <span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"ALL"</span>){</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## CHECK FOR VALID INPUTS</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#year::</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2022</span>, <span class="dv">2023</span>, <span class="dv">2024</span>)){</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid YEAR input. Function only accepts 2021-2024."</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">#num::</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  num <span class="ot">&lt;-</span> <span class="fu">toupper</span>(num)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. Only 1 variable permitted - PWGTP is automatically included."</span>)</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"PWGTP"</span>){</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. PWGTP is automatically included, a different numeric variable is required."</span>)</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">any</span>(<span class="sc">!</span>num <span class="sc">%in%</span> all_nums)){</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. The requested variable is not on the approved list of numeric variables."</span>)</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat::</span></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  cat <span class="ot">&lt;-</span><span class="fu">toupper</span>(cat)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CAT input. Only 1 variable permitted."</span>)</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">any</span>(<span class="sc">!</span>cat <span class="sc">%in%</span> all_cats)){</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CAT input. The requested variable is not on the approved list of categorical variables."</span>)</span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#geo::</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  geo <span class="ot">&lt;-</span> <span class="fu">toupper</span>(geo)</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(geo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. Only 1 geography variable may be provided."</span>)</span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>, <span class="st">"STATE"</span>, <span class="st">"ST"</span>)){</span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. The requested variable is not on the approved geography list."</span>)</span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> { <span class="co">#Correct ST vs. STATE if entered incorrectly</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2022</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"ST"</span></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span>(year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2023</span>, <span class="dv">2024</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"ST"</span>) {</span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"STATE"</span></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  <span class="co">#subgeo::</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN API PULL FUNCTION</span></span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">getFromAPI</span>(year, num, cat, geo) <span class="co">#subgeo</span></span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN TIDY FUNCTION</span></span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  tdata  <span class="ot">&lt;-</span> <span class="fu">makeTidy</span>(parsed)</span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN CLEANING FUNCTIONS</span></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>  dictionary <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(<span class="st">"data/vars"</span>,<span class="fu">as.character</span>(year),<span class="st">".rds"</span>))</span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanCat</span>(tdata,dictionary,cat)</span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanNum</span>(tdata,dictionary,num)</span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanGeo</span>(tdata,dictionary,geo)</span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>getPUMSData <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year=</span><span class="dv">2021</span>, <span class="at">num=</span><span class="st">"AGEP"</span>, <span class="at">cat=</span><span class="st">"SEX"</span>, <span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"ALL"</span>){</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## CHECK FOR VALID INPUTS</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#year::</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2022</span>, <span class="dv">2023</span>, <span class="dv">2024</span>)){</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid YEAR input. Function only accepts 2021-2024."</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">#num::</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  num <span class="ot">&lt;-</span> <span class="fu">toupper</span>(num)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. Only 1 variable permitted - PWGTP is automatically included."</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(num<span class="sc">==</span><span class="st">"PWGTP"</span>){</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. PWGTP is automatically included, a different numeric variable is required."</span>)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">any</span>(<span class="sc">!</span>num <span class="sc">%in%</span> all_nums)){</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid NUM input. The requested variable is not on the approved list of numeric variables."</span>)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat::</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  cat <span class="ot">&lt;-</span><span class="fu">toupper</span>(cat)</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CAT input. Only 1 variable permitted."</span>)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">any</span>(<span class="sc">!</span>cat <span class="sc">%in%</span> all_cats)){</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CAT input. The requested variable is not on the approved list of categorical variables."</span>)</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#geo::</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  geo <span class="ot">&lt;-</span> <span class="fu">toupper</span>(geo)</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(geo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. Only 1 geography variable may be provided."</span>)</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span>geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>, <span class="st">"STATE"</span>, <span class="st">"ST"</span>)){</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid GEO input. The requested variable is not on the approved geography list."</span>)</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> { <span class="co">#Correct ST vs. STATE if entered incorrectly</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2022</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"ST"</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span>(year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2023</span>, <span class="dv">2024</span>) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"ST"</span>) {</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>      geo <span class="ot">&lt;-</span> <span class="st">"STATE"</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>  <span class="co">#subgeo::</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN API PULL FUNCTION</span></span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">getFromAPI</span>(year, num, cat, geo) <span class="co">#subgeo</span></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN TIDY FUNCTION</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>  tdata  <span class="ot">&lt;-</span> <span class="fu">makeTidy</span>(parsed)</span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>  <span class="do">## RUN CLEANING FUNCTIONS</span></span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  dictionary <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(<span class="st">"data/vars"</span>,<span class="fu">as.character</span>(year),<span class="st">".rds"</span>))</span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanCat</span>(tdata,dictionary,cat)</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanNum</span>(tdata,dictionary,num)</span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanGeo</span>(tdata,dictionary,geo)</span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="testing" class="level3">
-<h3 class="anchored" data-anchor-id="testing">Testing</h3>
+<section id="testing" class="level2">
+<h2 class="anchored" data-anchor-id="testing">Testing</h2>
 <p>Example data pull using the <code>getPUMSData()</code> function, default inputs:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test &lt;- getPUMSData(year=2021) ##REVISIT lexical error in json text</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test &lt;- getPUMSData(year=2021) ##REVISIT lexical error in json text</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Example data pull using the <code>getPUMSData()</code> function, custom inputs</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"GASP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"REGION"</span>, <span class="at">subgeo=</span><span class="st">"ALL"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"JWAP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"REGION"</span>, <span class="at">subgeo=</span><span class="st">"ALL"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tibble [47,486 × 5] (S3: tbl_df/tbl/data.frame)
  $ HHL   : Factor w/ 6 levels "N/A (GQ/vacant)",..: 1 1 1 1 1 1 1 1 1 1 ...
  $ PWGTP : num [1:47486] 17 58 72 13 37 47 10 24 153 46 ...
- $ GASP  : num [1:47486] NA NA NA NA NA NA NA NA NA NA ...
+ $ JWAP  : Factor w/ 286 levels "10:20 a.m. to 10:24 a.m.",..: 203 203 203 203 203 218 203 NA 203 246 ...
  $ SCHL  : chr [1:47486] "24" "24" "24" "24" ...
  $ region: Factor w/ 5 levels "Northeast","Puerto Rico",..: 4 5 3 3 5 1 3 5 1 1 ...</code></pre>
 </div>
 </div>
 <p>Expected to fail (<code>getPUMSData</code>):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Nums</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Nums</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("AGEP", "GASP")): Invalid NUM input. Only 1 variable permitted - PWGTP is automatically included.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"PWGTP"</span>))         <span class="co">#too few inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"PWGTP"</span>))         <span class="co">#too few inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("PWGTP")): Invalid NUM input. PWGTP is automatically included, a different numeric variable is required.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))         <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))         <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("STATE")): Invalid NUM input. The requested variable is not on the approved list of numeric variables.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Cats</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Cats</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(cat = c("SEX", "FER")): Invalid CAT input. Only 1 variable permitted.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))      <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))      <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(cat = c("STATE")): Invalid CAT input. The requested variable is not on the approved list of categorical variables.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Geo</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>,<span class="st">"REGION"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Geo</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>,<span class="st">"REGION"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = c("STATE", "REGION")): Invalid GEO input. Only 1 geography variable may be provided.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STA"</span>))             <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STA"</span>))             <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = c("STA")): Invalid GEO input. The requested variable is not on the approved geography list.</code></pre>
 </div>
 </div>
 <p>Expected to fail (<code>getPUMSVars</code>):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>(<span class="dv">2020</span>)  <span class="co">#Invalid year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>(<span class="dv">2020</span>)  <span class="co">#Invalid year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSVars(2020): Invalid year input. Function only accepts 2021-2024</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>()      <span class="co">#No Year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>()      <span class="co">#No Year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSVars(): argument "year" is missing, with no default</code></pre>
 </div>
 </div>
 </section>
 </section>
-<section id="here" class="level2">
-<h2 class="anchored" data-anchor-id="here">— HERE —</h2>
+<section id="here" class="level1">
+<h1>— HERE —</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>input_checks <span class="ot">&lt;-</span> <span class="cf">function</span>(year, </span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>,<span class="st">"PWGTP"</span>), </span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">cats=</span><span class="fu">c</span>(<span class="st">"SEX"</span>), </span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), </span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">subgeo=</span><span class="cn">NULL</span>, ...) {</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="do">## SUBGEO</span></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Grab year-specific valid inputs</span></span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  vars <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(<span class="st">"data/vars"</span>,yearc,<span class="st">".rds"</span>))</span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  subR <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>REGION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  subD <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>DIVISION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
-<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>)) { </span>
-<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item)</span>
-<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>STATE<span class="sc">$</span>values<span class="sc">$</span>item) </span>
-<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
-<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(subgeo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
-<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. Only 1 sub-geography variable may be provided."</span>)</span>
-<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (geo<span class="sc">==</span><span class="st">"REGION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subR) {</span>
-<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = REGION. Note: this field is case-sensitive."</span>)</span>
-<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subD){</span>
-<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = DIVISION Note: this field is case-sensitive."</span>)</span>
-<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>) <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subS){</span>
-<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = STATE Note: this field is case-sensitive."</span>)</span>
-<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"REGION"</span>) {</span>
-<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a>    subgeo <span class="ot">&lt;-</span> <span class="st">"Northeast"</span>  <span class="co">#set default </span></span>
-<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"DIVISION"</span>) {</span>
-<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"New England (Northeast region)"</span>  <span class="co">#set default </span></span>
-<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>)) {</span>
-<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"District of Columbia/DC"</span>  <span class="co">#set default </span></span>
-<span id="cb32-42"><a href="#cb32-42" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb32-43"><a href="#cb32-43" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb32-44"><a href="#cb32-44" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb32-45"><a href="#cb32-45" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>input_checks <span class="ot">&lt;-</span> <span class="cf">function</span>(year, </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>,<span class="st">"PWGTP"</span>), </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">cats=</span><span class="fu">c</span>(<span class="st">"SEX"</span>), </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">subgeo=</span><span class="cn">NULL</span>, ...) {</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="do">## SUBGEO</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Grab year-specific valid inputs</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  vars <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(<span class="st">"data/vars"</span>,yearc,<span class="st">".rds"</span>))</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  subR <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>REGION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  subD <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>DIVISION<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(yearc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"2021"</span>, <span class="st">"2022"</span>)) { </span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item)</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    subS <span class="ot">&lt;-</span> <span class="fu">unlist</span>(vars<span class="sc">$</span>STATE<span class="sc">$</span>values<span class="sc">$</span>item) </span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Check validity</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(subgeo) <span class="sc">&gt;</span> <span class="dv">1</span>){</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. Only 1 sub-geography variable may be provided."</span>)</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (geo<span class="sc">==</span><span class="st">"REGION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subR) {</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = REGION. Note: this field is case-sensitive."</span>)</span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span> <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subD){</span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = DIVISION Note: this field is case-sensitive."</span>)</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>) <span class="sc">&amp;</span> <span class="sc">!</span>subgeo <span class="sc">%in%</span> subS){</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid SUBGEO input. The provided phrase is invalid for geo = STATE Note: this field is case-sensitive."</span>)</span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"REGION"</span>) {</span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>    subgeo <span class="ot">&lt;-</span> <span class="st">"Northeast"</span>  <span class="co">#set default </span></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo<span class="sc">==</span><span class="st">"DIVISION"</span>) {</span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"New England (Northeast region)"</span>  <span class="co">#set default </span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="fu">is.null</span>(subgeo) <span class="sc">&amp;</span> geo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"STATE"</span>, <span class="st">"ST"</span>)) {</span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>     subgeo <span class="ot">&lt;-</span> <span class="st">"District of Columbia/DC"</span>  <span class="co">#set default </span></span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Expected to fail:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>, <span class="st">"DC"</span>))  <span class="co">#too many inputs</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>))        <span class="co">#invalid inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>, <span class="st">"DC"</span>))  <span class="co">#too many inputs</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="dv">2021</span>, <span class="at">nums=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>), <span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>), <span class="at">subgeo=</span><span class="fu">c</span>(<span class="st">"NC"</span>))        <span class="co">#invalid inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="data-summarizing-functions" class="level2">
-<h2 class="anchored" data-anchor-id="data-summarizing-functions">Data Summarizing Functions</h2>
+<section id="data-summarizing-functions" class="level1">
+<h1>Data Summarizing Functions</h1>
 </section>
-<section id="investigation" class="level2">
-<h2 class="anchored" data-anchor-id="investigation">Investigation</h2>
+<section id="investigation" class="level1">
+<h1>Investigation</h1>
 <p><strong>Topic</strong></p>
 <p><strong>Results</strong></p>
 <p><strong>Discussion</strong></p>
