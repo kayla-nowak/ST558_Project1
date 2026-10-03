@@ -225,17 +225,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>getFromAPI <span class="ot">&lt;-</span> <span class="cf">function</span>(year, num, cat, geo, subgeo,...){</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  q <span class="ot">&lt;-</span> <span class="fu">paste</span>(cat, <span class="st">"PWGTP"</span>, num, <span class="at">sep=</span><span class="st">","</span>) </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>,<span class="fu">as.character</span>(year),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                <span class="st">"/acs/acs1/pums?get="</span>,q,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&amp;for="</span>,geo,<span class="st">":"</span>,subgeo,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&amp;SCHL=24&amp;key="</span>, my_key)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  pulled <span class="ot">&lt;-</span> httr<span class="sc">::</span><span class="fu">GET</span>(url)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(pulled<span class="sc">$</span>content))</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="do">##REMOVE SCHL=24 later</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  geoq <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(geo<span class="sc">==</span><span class="st">"ST"</span>,<span class="st">"state"</span>,<span class="fu">tolower</span>(geo))  <span class="co">#URL query takes 'state', not 'st'</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>,<span class="fu">as.character</span>(year),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">"/acs/acs1/pums?get="</span>,q,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&amp;for="</span>,geoq,<span class="st">":"</span>,subgeo,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&amp;SCHL=24&amp;key="</span>, my_key)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  pulled <span class="ot">&lt;-</span> httr<span class="sc">::</span><span class="fu">GET</span>(url)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(pulled<span class="sc">$</span>content))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="do">##REMOVE SCHL=24 later</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="maketidy" class="level3">
@@ -358,7 +360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"STATE"</span>) {</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">factor</span>(state, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"ST"</span>){</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">st =</span> <span class="fu">factor</span>(st, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">factor</span>(state, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"REGION"</span>){</span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    tdata <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">region =</span> <span class="fu">factor</span>(region, <span class="at">levels=</span><span class="fu">names</span>(lookup), <span class="at">labels=</span>lookup))</span>
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(geo<span class="sc">==</span><span class="st">"DIVISION"</span>){</span>
@@ -479,41 +481,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanNum</span>(tdata,dictionary,num)</span>
 <span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>  tdata <span class="ot">&lt;-</span> <span class="fu">cleanGeo</span>(tdata,dictionary,geo)</span>
 <span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>  <span class="do">## ASSIGN CLASS</span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>(tdata) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"census"</span>, <span class="fu">class</span>(tdata))</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(tdata)</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="testing" class="level2">
 <h2 class="anchored" data-anchor-id="testing">Testing</h2>
 <p>Example data pull using the <code>getPUMSData()</code> function, default inputs:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test &lt;- getPUMSData(year=2021) ##REVISIT lexical error in json text</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>census [267 × 5] (S3: census/tbl_df/tbl/data.frame)
+ $ SEX  : Factor w/ 2 levels "Male","Female": 1 1 1 2 1 1 2 1 1 2 ...
+ $ PWGTP: num [1:267] 4 14 36 66 81 339 120 145 54 103 ...
+ $ AGEP : num [1:267] 41 41 41 52 47 27 43 47 58 34 ...
+ $ SCHL : chr [1:267] "24" "24" "24" "24" ...
+ $ state: Factor w/ 52 levels "Alabama/AL","Utah/UT",..: 30 30 30 30 30 30 30 30 30 30 ...</code></pre>
+</div>
 </div>
 <p>Example data pull using the <code>getPUMSData()</code> function, custom inputs</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"JWAP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"REGION"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"JWAP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"REGION"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tibble [9,980 × 5] (S3: tbl_df/tbl/data.frame)
+<pre><code>census [9,980 × 5] (S3: census/tbl_df/tbl/data.frame)
  $ HHL   : Factor w/ 6 levels "N/A (GQ/vacant)",..: 1 1 1 1 1 1 1 1 1 1 ...
  $ PWGTP : num [1:9980] 47 153 46 3 60 90 29 14 159 27 ...
  $ JWAP  : chr [1:9980] "01:07 PM" NA "09:32 AM" NA ...
  $ SCHL  : chr [1:9980] "24" "24" "24" "24" ...
  $ region: Factor w/ 5 levels "Northeast","Puerto Rico",..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"JWDP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"10"</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test) <span class="co">#Note: JWDP is mostly NA</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"JWDP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"10"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test) <span class="co">#Note: JWDP is mostly NA</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tibble [197 × 5] (S3: tbl_df/tbl/data.frame)
- $ HHL  : Factor w/ 6 levels "N/A (GQ/vacant)",..: 5 4 4 4 4 4 4 4 3 4 ...
- $ PWGTP: num [1:197] 92 87 58 8 46 80 190 173 137 104 ...
+<pre><code>census [197 × 5] (S3: census/tbl_df/tbl/data.frame)
+ $ HHL  : Factor w/ 6 levels "N/A (GQ/vacant)",..: 4 3 5 4 4 5 4 3 4 4 ...
+ $ PWGTP: num [1:197] 107 40 64 64 68 88 98 92 13 57 ...
  $ JWDP : chr [1:197] NA NA NA NA ...
  $ SCHL : chr [1:197] "24" "24" "24" "24" ...
  $ state: Factor w/ 52 levels "Tennessee/TN",..: 41 41 41 41 41 41 41 41 41 41 ...</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"GASP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"DIVISION"</span>, <span class="at">subgeo=</span><span class="st">"all"</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">##REVISIT TIME CLEAN - format coerces to character</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">getPUMSData</span>(<span class="at">year=</span><span class="dv">2024</span>, <span class="at">num=</span><span class="st">"GASP"</span>, <span class="at">cat=</span><span class="st">"HHL"</span>, <span class="at">geo=</span><span class="st">"DIVISION"</span>, <span class="at">subgeo=</span><span class="st">"all"</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tibble [47,486 × 5] (S3: tbl_df/tbl/data.frame)
+<pre><code>census [47,486 × 5] (S3: census/tbl_df/tbl/data.frame)
  $ HHL     : Factor w/ 6 levels "N/A (GQ/vacant)",..: 1 1 1 1 1 1 1 1 1 1 ...
  $ PWGTP   : num [1:47486] 17 58 72 13 37 47 10 24 153 46 ...
  $ GASP    : num [1:47486] NA NA NA NA NA NA NA NA NA NA ...
@@ -523,55 +540,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Expected to fail (<code>getPUMSData</code>):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Nums</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Nums</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("AGEP", "GASP")): Invalid NUM input. Only 1 variable permitted - PWGTP is automatically included.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"PWGTP"</span>))         <span class="co">#too few inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"PWGTP"</span>))         <span class="co">#too few inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("PWGTP")): Invalid NUM input. PWGTP is automatically included, a different numeric variable is required.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))         <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">num=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))         <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(num = c("STATE")): Invalid NUM input. The requested variable is not on the approved list.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Cats</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Cats</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(cat = c("SEX", "FER")): Invalid CAT input. Only 1 variable permitted.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))      <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">cat=</span><span class="fu">c</span>(<span class="st">"STATE"</span>))      <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(cat = c("STATE")): Invalid CAT input. The requested variable is not on the approved list.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Geo</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>,<span class="st">"REGION"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Geo</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STATE"</span>,<span class="st">"REGION"</span>))  <span class="co">#too many inputs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = c("STATE", "REGION")): Invalid GEO input. Only 1 geography variable may be provided.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STA"</span>))             <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="fu">c</span>(<span class="st">"STA"</span>))             <span class="co">#unapproved var</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = c("STA")): Invalid GEO input. The requested variable is not on the approved geography list.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"1"</span>)      <span class="co">#state codes are two digits</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Invalid Subgeo</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"1"</span>)      <span class="co">#state codes are two digits</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = "STATE", subgeo = "1"): Invalid SUBGEO input. Requires a valid code number/phrase for ST geography.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"Texas"</span>)  <span class="co">#state codes are two digits</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSData</span>(<span class="at">geo=</span><span class="st">"STATE"</span>, <span class="at">subgeo=</span><span class="st">"Texas"</span>)  <span class="co">#state codes are two digits</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSData(geo = "STATE", subgeo = "Texas"): Invalid SUBGEO input. Requires a valid code number/phrase for ST geography.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">#getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Expected to fail (<code>getPUMSVars</code>):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>(<span class="dv">2020</span>)  <span class="co">#Invalid year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>(<span class="dv">2020</span>)  <span class="co">#Invalid year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSVars(2020): Invalid year input. Function only accepts 2021-2024</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>()      <span class="co">#No Year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getPUMSVars</span>()      <span class="co">#No Year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in getPUMSVars(): argument "year" is missing, with no default</code></pre>
 </div>
