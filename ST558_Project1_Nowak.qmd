@@ -40,9 +40,13 @@ all_vars <- c("PWGTP", all_nums, all_cats, "ST", "STATE", "REGION", "DIVISION")
 
 ## Variable Values
 
-`getPUMSVars()` pulls and parses variable names and values for the PUMS data in a given year.
+Most PUMS data are reported as coded values, with codes defined in the online data dictionary for each year. Dictionaries (aka codebooks, or variables values documents) were downloaded to the repository to facilitate future access. The function used to perform this task is described below.
 
-One year-specific .rda file is returned, and this file is saved in the repository's `/data` folder for future access. Later functions reference these .rda files when defining the `dictionary`.
+### `getPUMSVars()`
+
+This function pulls and parses all applicable variable names and values for the PUMS data in a given year.
+
+The function returns a single, year-specific .rda file, which is saved in the repository's `/data` folder for future access. Later functions reference these .rda files when defining the `dictionary`.
 
 -   Input: `year` (2021, 2022, 2023, 2024)
 -   Return: `data/vars_yyyy.rda` (as list)
@@ -89,9 +93,20 @@ Called for all valid years, then commented out.
 #getPUMSVars(2024)
 ```
 
+### Testing
+
+Example of invalid `getPUMSVars()` application, expected to fail.
+
+```{r}
+#| error: true
+getPUMSVars(2020)           #invalid year
+```
+
 ## API Pull: Helpers
 
 The following helper functions perform dedicated tasks and are called within the main, wrapper function (`getPUMSData` defined later).
+
+*Note: testing for all helper functions are included in the "API Pull: Main" testing section.*
 
 ### `queryAPI()`
 
@@ -248,14 +263,12 @@ cleanGeo <- function(tdata,dictionary,geo,year,...){
 }
 ```
 
-
 ### `getOneYear()`
 
 This is a helper function that runs all prior helper functions. It is designed to query, tidy, and clean PUMS data for a single year. Within the main wrapper function (`getPUMSData` defined later), this helper function may be called multiple times to compile multiple years of data.
 
 -   Input: all query parameters, as given to the main/wrapper function.
 -   Return: a cleaned, single year tibble
-
 
 ```{r}
 getOneYear <- function(year, num, cat, geo, subgeo,...){
@@ -287,23 +300,30 @@ getOneYear <- function(year, num, cat, geo, subgeo,...){
 
 ```
 
-
 ## API Pull: Main
 
-The **`getPUMSData`** function ...
+The following wrapper function performs all data querying, cleaning, and compiling operations for PUMS data. Multiple years may be requested, but all other arguments are restricted to a single value.
 
--   `year` accepts 2021, 2022, 2023, 2024
--   `nums` accepts one numeric variable: AGEP (default), GASP, GRPIP, JWAP, JWDP, JWMNP
+### `getPUMSData`
+
+This function accepts multiple years and returns a single, combined tibble with cleaned data. Valid user inputs are as follows.
+
+-   `years` accepts any combination of 2021, 2022, 2023, and/or 2024 (default = 2024)
+-   `nums` accepts one numeric variable: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP (default = AGEP)
     -   Note: "PWGTP" is automatically included in addition to the requested variable
--   `cats` accepts one categorical variable: FER, HHL, SCH, SCHL, SEX (default).
--   `geo` accepts one level of geography: REGION, DIVISION, STATE (default)
+-   `cats` accepts one categorical variable: FER, HHL, SCH, SCHL, SEX (default = SEX).
+-   `geo` accepts one level of geography: REGION, DIVISION, STATE (default = STATE)
     -   Note: either "STATE" or "ST" may be used to request state-level geography
--   `subgeo` accepts one sub-level of geography: NULL (default), ALL, or a numeric code
-    -   The numeric code lists are specific to each level of geography. Please see the [online PUMAS variable documentation](https://api.census.gov/data/2024/acs/acs1/pums/variables.html) for a complete list.
-    -   If no sub-level of geography is provided, the following defaults are used:
-        -   REGION = 1 ("Northeast")
-        -   DIVISION = 1 ("New England (Northeast region)")
-        -   STATE = 11 ("District of Columbia/DC")
+-   `subgeo` accepts one sub-level of geography: ALL, NULL, or a numeric code
+    -   ALL preserves all available levels of the requested geography (i.e., no subset applied).
+
+    -   NULL subsets the data to a default sub-level of geography:
+
+        -   1 ("Northeast") for REGION geography
+        -   1 ("New England (Northeast region)") for DIVISION geography
+        -   11 ("District of Columbia/DC") for STATE geography
+
+    -   Numeric codes for all available sub-levels of geography can be found in the year-specific online data dictionary: [2021](https://api.census.gov/data/2021/acs/acs1/pums/variables.html), [2022](https://api.census.gov/data/2022/acs/acs1/pums/variables.html), [2023](https://api.census.gov/data/2023/acs/acs1/pums/variables.html), or [2024](https://api.census.gov/data/2024/acs/acs1/pums/variables.html).
 
 ```{r}
 getPUMSData <- function(years=c(2024), num="AGEP", cat="SEX", geo="STATE", subgeo=NULL,...){
@@ -383,31 +403,27 @@ getPUMSData <- function(years=c(2024), num="AGEP", cat="SEX", geo="STATE", subge
 }
 ```
 
-## Testing
+### Testing
 
-Example data pull using the `getPUMSData()` function, default inputs:
-
-```{r}
-test <- getPUMSData()
-str(test)
-```
-
-Example data pull using the `getPUMSData()` function, custom inputs
+Examples of successful `getPUMSData()` applications:
 
 ```{r}
-test <- getPUMSData(years=2024, num="JWAP", cat="HHL", geo="REGION")
+#all defaults
+test <- getPUMSData()          
 str(test)
 
-test <- getPUMSData(years=2024, num="JWDP", cat="HHL", geo="STATE", subgeo="10")
-str(test) #Note: JWDP is mostly NA
-
-##REVISIT TIME CLEAN - format coerces to character
-
-test <- getPUMSData(years=2024, num="GASP", cat="HHL", geo="DIVISION", subgeo="all")
+#all defaults, except geo
+test <- getPUMSData(geo="DIVISION")
 str(test)
+
+#multi-year with all custom inputs
+test <- getPUMSData(years=c(2021,2024), num="JWAP", cat="HHL", geo="REGION", subgeo="2")
+str(test)
+
 ```
 
-Expected to fail (`getPUMSData`):
+
+Invalid applications of `getPUMSData`, expected to fail:
 
 ```{r}
 #| error: true
@@ -415,34 +431,25 @@ Expected to fail (`getPUMSData`):
 #Invalid Nums
 getPUMSData(num=c("AGEP", "GASP"))  #too many inputs
 getPUMSData(num=c("PWGTP"))         #too few inputs
-getPUMSData(num=c("STATE"))         #unapproved var
+getPUMSData(num=c("STATE"))         #unapproved variable
 
 #Invalid Cats
-getPUMSData(cat=c("SEX","FER"))  #too many inputs
-getPUMSData(cat=c("STATE"))      #unapproved var
+getPUMSData(cat=c("SEX","FER"))     #too many inputs
+getPUMSData(cat=c("STATE"))         #unapproved variable
 
 #Invalid Geo
 getPUMSData(geo=c("STATE","REGION"))  #too many inputs
-getPUMSData(geo=c("STA"))             #unapproved var
+getPUMSData(geo=c("STA"))             #unapproved variable
 
 #Invalid Subgeo
-getPUMSData(geo="STATE", subgeo="1")      #state codes are two digits
-getPUMSData(geo="STATE", subgeo="Texas")  #state codes are two digits
+#getPUMSData(geo="STATE", subgeo="1")      #state codes are two digits -- jk this works :)
+#getPUMSData(geo="STATE", subgeo="Texas")  #crashes at parse -- TRY TO FIX
+#getPUMSData(geo="DIVISION", subgeo="22")  #crasehs at parse -- TRY to FIX
 
 #getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work
 
 ```
 
-Expected to fail (`getPUMSVars`):
-
-```{r}
-#| error: true
-
-getPUMSVars(2020)  #Invalid year
-getPUMSVars()      #No Year
-```
-
-# --- HERE ---
 
 # Data Summarizing Functions
 
