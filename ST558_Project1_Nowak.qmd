@@ -91,14 +91,6 @@ Called for all valid years, then commented out.
 #getPUMSVars(2024)
 ```
 
-### Testing
-
-Example of invalid `getPUMSVars()` application, expected to fail.
-
-```{r}
-#| error: true
-getPUMSVars(2020)           #invalid year
-```
 
 ## API Pull: Helpers
 
@@ -121,13 +113,10 @@ queryAPI <- function(year, nums, cats, geo, subgeo,...){
   url <- paste0("https://api.census.gov/data/",as.character(year),
                 "/acs/acs1/pums?get=",q,
                 "&for=",tolower(geo),":",subgeo,
-                "&SCHL=24&key=", my_key)
+                "&key=", my_key)
   
   pulled <- httr::GET(url)
   parsed <- fromJSON(rawToChar(pulled$content))
-  
-  ##REMOVE SCHL=24 later
-
 }
 ```
 
@@ -140,7 +129,7 @@ This function converts the requested data to a tibble with meaningful column nam
 
 ```{r}
 makeTidy <- function(parsed,...){
-  
+
   #Get colnames from 1st row
   colnames(parsed) <- parsed[1,]
   
@@ -167,7 +156,6 @@ cleanCat <- function(tdata,dictionary,cats,...){
   }
 
  return(tdata)
-
 }
 ```
 
@@ -175,7 +163,7 @@ cleanCat <- function(tdata,dictionary,cats,...){
 
 ### `cleanTime()`
 
-This is a helper function, called within the `cleanNum()` function defined below to convert any requested time variables (JWAP and JWDP) to interpretable numeric time data.
+This is a helper function, called within the `cleanNum` function defined below to convert any requested time variables (JWAP and JWDP) to interpretable numeric time data.
 
 Raw time data are numeric codes representing a period of time (HH:MM am/pm to HH:MM am/pm). These values are decoded using the relevant data dictionary, and the midpoint of the time period is returned under the original variable name. 
 
@@ -243,7 +231,6 @@ cleanNum <- function(tdata,dictionary,nums,...){
   } 
   
   return(tdata)
-
 } 
 ```
 
@@ -270,7 +257,8 @@ cleanGeo <- function(tdata,dictionary,geo,year,...){
   } else if(geo=="DIVISION"){
     tdata <- tdata |> mutate(division = factor(division, levels=names(lookup), labels=lookup))
   }
-
+  
+  return(tdata)
 }
 ```
 
@@ -306,7 +294,6 @@ getOneYear <- function(year, nums, cats, geo, subgeo,...){
   #Assign class
   class(tdata) <- c("census", class(tdata))
   return(tdata)
-  
 }
 
 ```
@@ -406,74 +393,19 @@ getPUMSData <- function(years=c(2024), nums=c("AGEP"), cats=c("SEX"), geo="STATE
   }
   
   return(all_years)
- 
 }
-```
-
-### Testing
-
-Examples of successful `getPUMSData()` applications:
-
-```{r}
-#| eval: FALSE
-
-#all defaults
-test <- getPUMSData()          
-str(test)
-
-#multiyear + division geography
-test <- getPUMSData(years=c(2021,2024), geo="DIVISION")
-str(test)
-
-#all numeric options
-test <- getPUMSData(years=c(2021,2024), nums=all_nums, geo="REGION", subgeo="2")
-str(test)
-
-#all categorical options
-test <- getPUMSData(years=c(2021,2024), cats=all_cats, geo="REGION", subgeo="2")
-str(test)
-
-```
-
-Invalid applications of `getPUMSData`, expected to fail:
-
-```{r}
-#| eval: false
-#| error: true
-
-#Invalid Nums
-getPUMSData(num=c("AGEP", "GASP"))  #too many inputs
-getPUMSData(num=c("PWGTP"))         #too few inputs
-getPUMSData(num=c("STATE"))         #unapproved variable
-
-#Invalid Cats
-getPUMSData(cat=c("SEX","FER"))     #too many inputs
-getPUMSData(cat=c("STATE"))         #unapproved variable
-
-#Invalid Geo
-getPUMSData(geo=c("STATE","REGION"))  #too many inputs
-getPUMSData(geo=c("STA"))             #unapproved variable
-
-#Invalid Subgeo
-#getPUMSData(geo="STATE", subgeo="1")      #state codes are two digits -- jk this works :)
-#getPUMSData(geo="STATE", subgeo="Texas")  #crashes at parse -- TRY TO FIX
-#getPUMSData(geo="DIVISION", subgeo="22")  #crasehs at parse -- TRY to FIX
-
-#getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work
-
 ```
 
 
 # Data Summarizing Functions
 
 
-### `summarizeCensusNums()`
+### `summary.census()`
 
-***make generic: summary.census***
 ***add documentation***
 
 ```{r}
-summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
+summary.census <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
 
   ## PROCESS INPUTS
   pick_nums <- toupper(pick_nums)
@@ -487,38 +419,41 @@ summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
     pick_nums <- valid_nums
   } else if(all(!pick_nums %in% valid_nums)){
     stop("No valid inputs were provided for PICK_NUMS.")
-  } else{
-    #Only continue with valid options
-    pick_nums <- intersect(pick_nums, valid_nums)
-  }
+  } 
+  
+  #Only continue with valid options that appear in the dataset
+  pick_nums <- intersect(intersect(pick_nums, valid_nums), names(tdata))
+
   
   #Refine pick_cats list
   if (pick_cats=="ALL"){
     pick_cats <- valid_cats
   } else if(all(!pick_cats %in% valid_cats)){
     stop("No valid inputs were provided for PICK_CATS.")
-  } else{
-    #Only continue with valid options
-    pick_cats <- intersect(pick_cats, valid_cats)
-  }
+  } 
+  
+  #Only continue with valid options that appear in the dataset
+  pick_cats <- intersect(intersect(pick_cats, valid_cats), names(tdata))
+ 
 
-  ## NUMERIC SUMMARY (MEAN)
-  element_means <- tdata |>
+  ## NUMERIC SUMMARY (MEAN, SD)
+  just_means <- tdata |>
     select(PWGTP, any_of(pick_nums)) |>
     summarize(across(where(is.numeric),
-                     .fns   = list("mean" = ~ (sum(.x*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE))),
-                     .names = "{.col}_{.fn}")) |>
-    select(-PWGTP_mean)
-
-
-  ## NUMERIC SUMMARY (SD)
-  element_sd <- tdata |>
+                     .fns = list("mean" = ~ (sum(.x*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE))),
+                     .names = "{.col}")) |>
+    pivot_longer(cols=everything(), names_to = "Variable", values_to="mean")
+  
+  just_sd <- tdata |>
     select(PWGTP, any_of(pick_nums)) |>
     summarize(across(where(is.numeric),
-                     .fns   = list("sd"   = ~ sd(.x, na.rm=TRUE)),
-                     .names = "{.col}_{.fn}")) |>
-    select(-PWGTP_sd)
-
+                     .fns = list("sd"   = ~ sd(.x, na.rm=TRUE)),
+                     .names = "{.col}")) |>
+    pivot_longer(cols=everything(), names_to = "Variable", values_to="sd") 
+  
+  
+  element_meansd <- full_join(just_means, just_sd, by="Variable")
+  
   
   ## CATEGORICAL SUMMARY (N x level)
   list_count <- vector("list", length(pick_cats))
@@ -531,8 +466,7 @@ summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
 
  
   ## COMPILE RESULTS AS A LIST
-  results <- list("means" = element_means,
-                  "sd"    = element_sd,
+  results <- list("mean_sd" = element_meansd,
                   "count" = list_count)
 
   return(results)
@@ -541,17 +475,6 @@ summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
 ```
 
 
-Test
-
-```{r}
-test2 <- getPUMSData(years=c(2021), nums=all_nums, cats=all_cats, geo="REGION", subgeo="2")
-
-test2_sum <- summarizeCensusNums(test2)
-
-test2_sum[1]
-test2_sum[2]
-test2_sum[3]
-```
 
 ### `plot.census()`
 
@@ -588,10 +511,107 @@ plot.census <- function(tdata, num, cat){
 }
 ```
 
-Testing
+
+# Testing
+
+## Correct Usage
+
+Example function applications: default settings.
 
 ```{r}
-plot(test2, num="AGEP", cat="FER")
+
+#API Data Pull
+default <- getPUMSData()   
+str(default)
+
+#Summary
+default_sum <- summary(default)
+default_sum
+
+#Graphics (AGEP x SEX)
+plot(default, num="AGEP", cat="SEX")
+
+```
+
+Example function applications: multi-year data.
+
+```{r}
+#API Data Pull
+test <- getPUMSData(years=c(2021,2022), nums= c("AGEP", "JWAP"), geo="DIVISION")
+str(test)
+
+#Summary
+test_sum <- summary(test)
+test_sum
+
+#Graphics (AGEP x YEAR)
+plot(test, num="AGEP", cat="YEAR")
+
+```
+
+Example function applications:  all covariates
+
+```{r}
+#| eval: FALSE
+
+#API Data Pull
+test <- getPUMSData(nums=all_nums, cats=call_cats, geo="REGION", subgeo="2")
+str(test)
+
+#Summary
+test_sum <- summary(test)
+
+#Graphics ( x )
+plot(test, num="", cat="")
+```
+
+## Incorrect Usage
+
+For `getPUMSVars`:
+
+```{r}
+#| error: true
+getPUMSVars(2020)           #invalid year
+```
+
+For `getPUMSData`:
+
+```{r}
+#| eval: false
+#| error: true
+
+#Invalid Nums
+getPUMSData(num=c("AGEP", "GASP"))  #too many inputs
+getPUMSData(num=c("PWGTP"))         #too few inputs
+getPUMSData(num=c("STATE"))         #unapproved variable
+
+#Invalid Cats
+getPUMSData(cat=c("SEX","FER"))     #too many inputs
+getPUMSData(cat=c("STATE"))         #unapproved variable
+
+#Invalid Geo
+getPUMSData(geo=c("STATE","REGION"))  #too many inputs
+getPUMSData(geo=c("STA"))             #unapproved variable
+
+#Invalid Subgeo
+#getPUMSData(geo="STATE", subgeo="1")      #state codes are two digits -- jk this works :)
+#getPUMSData(geo="STATE", subgeo="Texas")  #crashes at parse -- TRY TO FIX
+#getPUMSData(geo="DIVISION", subgeo="22")  #crasehs at parse -- TRY to FIX
+
+#getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work
+
+```
+
+For `summary.census`:
+
+```{r}
+
+```
+
+For `plot.census`:
+
+```{r}
+
 ```
 
 
