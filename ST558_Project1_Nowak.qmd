@@ -300,10 +300,8 @@ getOneYear <- function(year, nums, cats, geo, subgeo,...){
   tdata <- cleanNum(tdata,dictionary,nums)
   tdata <- cleanGeo(tdata,dictionary,geo,year)
   
-  
-  
-  #Add year as a variable
-  tdata <- tdata |> mutate(year=as.numeric(year))
+    #Add year as a variable
+  tdata <- tdata |> mutate(YEAR=factor(year, levels=c(2021, 2022, 2023, 2024)))
   
   #Assign class
   class(tdata) <- c("census", class(tdata))
@@ -417,6 +415,8 @@ getPUMSData <- function(years=c(2024), nums=c("AGEP"), cats=c("SEX"), geo="STATE
 Examples of successful `getPUMSData()` applications:
 
 ```{r}
+#| eval: FALSE
+
 #all defaults
 test <- getPUMSData()          
 str(test)
@@ -465,6 +465,93 @@ getPUMSData(geo=c("STA"))             #unapproved variable
 
 
 # Data Summarizing Functions
+
+
+### `summarizeCensusNums()`
+
+```{r}
+summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
+
+  ## PROCESS INPUTS
+  pick_nums <- toupper(pick_nums)
+  pick_cats <- toupper(pick_cats)
+
+  valid_nums <- c("AGEP", "GASP", "GRPIP", "JWMNP")
+  valid_cats <- c("YEAR", all_cats)
+
+  #Refine pick_nums list
+  if (pick_nums=="ALL"){
+    pick_nums <- valid_nums
+  } else if(all(!pick_nums %in% valid_nums)){
+    stop("No valid inputs were provided for PICK_NUMS.")
+  } else{
+    #Only continue with valid options
+    pick_nums <- intersect(pick_nums, valid_nums)
+  }
+  
+  #Refine pick_cats list
+  if (pick_cats=="ALL"){
+    pick_cats <- valid_cats
+  } else if(all(!pick_cats %in% valid_cats)){
+    stop("No valid inputs were provided for PICK_CATS.")
+  } else{
+    #Only continue with valid options
+    pick_cats <- intersect(pick_cats, valid_cats)
+  }
+
+  ## NUMERIC SUMMARY (MEAN)
+  element_means <- tdata |>
+    select(PWGTP, any_of(pick_nums)) |>
+    summarize(across(where(is.numeric),
+                     .fns   = list("mean" = ~ (sum(.x*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE))),
+                     .names = "{.col}_{.fn}")) |>
+    select(-PWGTP_mean)
+
+
+  ## NUMERIC SUMMARY (SD)
+  element_sd <- tdata |>
+    select(PWGTP, any_of(pick_nums)) |>
+    summarize(across(where(is.numeric),
+                     .fns   = list("sd"   = ~ sd(.x, na.rm=TRUE)),
+                     .names = "{.col}_{.fn}")) |>
+    select(-PWGTP_sd)
+
+  
+  ## CATEGORICAL SUMMARY (N x level)
+  list_count <- vector("list", length(pick_cats))
+  names(list_count) <- pick_cats
+
+  for(i in 1:length(pick_cats)){
+     element_count <- tdata |> count(tdata[,pick_cats[i]], wt=PWGTP)
+     list_count[[i]] <- element_count
+  }
+
+ 
+  ## COMPILE RESULTS AS A LIST
+  results <- list("means" = element_means,
+                  "sd"    = element_sd,
+                  "count" = list_count)
+
+  return(results)
+}
+
+```
+
+
+Test
+
+```{r}
+test2 <- getPUMSData(years=c(2021), nums=all_nums, cats=all_cats, geo="REGION", subgeo="2")
+
+test2_sum <- summarizeCensusNums(test2)
+
+test2_sum[1]
+test2_sum[2]
+test2_sum[3]
+```
+
+
+
 
 # Investigation
 
