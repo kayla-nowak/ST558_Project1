@@ -116,9 +116,9 @@ This function queries the Census API for PUMAS data and returns a matrix of the 
 -   Return: a matrix
 
 ```{r}
-queryAPI <- function(year, nums, cat, geo, subgeo,...){
+queryAPI <- function(year, nums, cats, geo, subgeo,...){
   
-  q <- paste(c(cat, nums), collapse=",") 
+  q <- paste(c(cats, nums), collapse=",") 
 
   url <- paste0("https://api.census.gov/data/",as.character(year),
                 "/acs/acs1/pums?get=",q,
@@ -159,26 +159,20 @@ This function converts the requested categorical variable to a factor, based on 
 -   Return: an updated tibble
 
 ```{r}
-cleanCat <- function(tdata,dictionary,cat,...){
-  
-  #Store variable labels
-  lookup <- unlist(dictionary[[cat]]$values$item)
-  
-  #Apply labels and levels
-  if(cat=="SEX") {
-    tdata <- tdata |> mutate(SEX = factor(SEX, levels=names(lookup), labels=lookup))
-  } else if(cat=="FER"){
-    tdata <- tdata |> mutate(FER = factor(FER, levels=names(lookup), labels=lookup))
-  } else if(cat=="HHL"){
-    tdata <- tdata |> mutate(HHL = factor(HHL, levels=names(lookup), labels=lookup))
-  } else if(cat=="SCH"){
-    tdata <- tdata |> mutate(SCH = factor(SCH, levels=names(lookup), labels=lookup))
-  } else if(cat=="SCHL"){
-    tdata <- tdata |> mutate(SCHL = factor(SCHL, levels=names(lookup), labels=lookup))
-  } 
+cleanCat <- function(tdata,dictionary,cats,...){
+
+  for (i in 1:length(cats)){
+    lookup <- unlist(dictionary[[cats[i]]]$values$item)
+    tdata[,cats[i]] <- factor(tdata[[cats[i]]],     #tibble-to-vector syntax
+                              levels=names(lookup), 
+                              labels=lookup)
+  }
+
+ return(tdata)
 
 }
 ```
+
 
 ### `cleanNum()`
 
@@ -276,7 +270,7 @@ This is a helper function that runs all prior helper functions. It is designed t
 -   Return: a cleaned, single year tibble
 
 ```{r}
-getOneYear <- function(year, nums, cat, geo, subgeo,...){
+getOneYear <- function(year, nums, cats, geo, subgeo,...){
 
   ## CHECK SUBGEO AGAINST DICTIONARY
   dictionary <- readRDS(paste0("data/vars",as.character(year),".rds"))
@@ -284,13 +278,13 @@ getOneYear <- function(year, nums, cat, geo, subgeo,...){
   ##-----more to add
   
   ## RUN API PULL FUNCTION
-  parsed <- queryAPI(year, nums, cat, geo, subgeo)
+  parsed <- queryAPI(year, nums, cats, geo, subgeo)
 
   ## RUN TIDY FUNCTION
   tdata  <- makeTidy(parsed)
   
   ## RUN CLEANING FUNCTIONS
-  tdata <- cleanCat(tdata,dictionary,cat)
+  tdata <- cleanCat(tdata,dictionary,cats)
   tdata <- cleanNum(tdata,dictionary,nums)
   tdata <- cleanGeo(tdata,dictionary,geo,year)
   
@@ -314,9 +308,9 @@ The following wrapper function performs all data querying, cleaning, and compili
 This function accepts multiple years and returns a single, combined tibble with cleaned data. Valid user inputs are as follows.
 
 -   `years` accepts any combination of 2021, 2022, 2023, and/or 2024 (default = 2024)
--   `nums` accepts one numeric variable: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP (default = AGEP)
+-   `nums` accepts any of these numeric variables: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP (default = AGEP)
     -   Note: "PWGTP" is automatically included in addition to the requested variable
--   `cats` accepts one categorical variable: FER, HHL, SCH, SCHL, SEX (default = SEX).
+-   `cats` accepts any of these categorical variables: FER, HHL, SCH, SCHL, SEX (default = SEX).
 -   `geo` accepts one level of geography: REGION, DIVISION, STATE (default = STATE)
     -   Note: either "STATE" or "ST" may be used to request state-level geography
 -   `subgeo` accepts one sub-level of geography: ALL, NULL, or a numeric code
@@ -331,7 +325,7 @@ This function accepts multiple years and returns a single, combined tibble with 
     -   Numeric codes for all available sub-levels of geography can be found in the year-specific online data dictionary: [2021](https://api.census.gov/data/2021/acs/acs1/pums/variables.html), [2022](https://api.census.gov/data/2022/acs/acs1/pums/variables.html), [2023](https://api.census.gov/data/2023/acs/acs1/pums/variables.html), or [2024](https://api.census.gov/data/2024/acs/acs1/pums/variables.html).
 
 ```{r}
-getPUMSData <- function(years=c(2024), nums="AGEP", cat="SEX", geo="STATE", subgeo=NULL,...){
+getPUMSData <- function(years=c(2024), nums=c("AGEP"), cats=c("SEX"), geo="STATE", subgeo=NULL,...){
 
   ## CHECK INPUTS
   
@@ -353,14 +347,12 @@ getPUMSData <- function(years=c(2024), nums="AGEP", cat="SEX", geo="STATE", subg
     stop("Invalid NUMS input. At lease 1 variable other than PWGTP is required.")
   }
 
-  #cat:
-  cat <-toupper(cat)
+  #cats:
+  cats <- unique(toupper(cats))
   
-  if (length(cat)>1) {
-    stop("Invalid CAT input. Only 1 variable permitted.")
-  } else if(any(!cat %in% all_cats)){
-    stop("Invalid CAT input. The requested variable is not on the approved list.")
-  }
+  if (any(!cats %in% all_cats)){
+    stop("Invalid CATS input. At least 1 variable is not on the approved list.")
+  } 
 
   #geo:
   geo <- toupper(geo)
@@ -389,15 +381,15 @@ getPUMSData <- function(years=c(2024), nums="AGEP", cat="SEX", geo="STATE", subg
   }
   
   #print final parameters to console
-  message("Run for: ", years, " with ", nums, " & ", cat, " for ", geo, " at ", subgeo)
+  message("Run for: ", paste(years,collapse="|"), " with ", paste(nums,collapse="|"), " & ", paste(cats,collapse="|"), " for ", geo, " at ", subgeo)
   
   
   ## PULL CLEAN DATA
-  all_years <- getOneYear(years[1],nums,cat,geo,subgeo)
+  all_years <- getOneYear(years[1],nums,cats,geo,subgeo)
   
   if(length(years)>1){
      for (i in 2:length(years)){
-        all_years <- all_years |> rbind(getOneYear(years[i],nums,cat,geo,subgeo))
+        all_years <- all_years |> rbind(getOneYear(years[i],nums,cats,geo,subgeo))
      }
   }
   
@@ -415,25 +407,29 @@ Examples of successful `getPUMSData()` applications:
 test <- getPUMSData()          
 str(test)
 
-#all defaults, except geo
-test <- getPUMSData(geo="DIVISION")
+#multiyear + division geography
+test <- getPUMSData(years=c(2021,2024), geo="DIVISION")
 str(test)
 
-#multi-year with all custom inputs
-test <- getPUMSData(years=c(2021,2024), nums=all_nums, cat="HHL", geo="REGION", subgeo="2")
+#all numeric options
+test <- getPUMSData(years=c(2021,2024), nums=all_nums, geo="REGION", subgeo="2")
+str(test)
+
+#all categorical options
+test <- getPUMSData(years=c(2021,2024), cats=all_cats, geo="REGION", subgeo="2")
 str(test)
 
 ```
 
 
 ```{r}
- year <- 2024
-  cat <- "SEX"
-  nums <- c("PWGTP",all_nums)
+  year <- 2024
+  cats <- all_cats
+  nums <- c("PWGTP","AGEP")
   geo <- "STATE"
   subgeo <- "11"
   
-  q <- paste(c("SEX", nums), collapse=",")
+  q <- paste(c(cats, nums), collapse=",")
 
   url <- paste0("https://api.census.gov/data/",as.character(year),
                 "/acs/acs1/pums?get=",q,
@@ -451,7 +447,7 @@ str(test)
   #Make parsed tidy with colnames
   tdata  <- as_tibble(parsed) |> slice(-1) 
   
-dictionary <- readRDS(paste0("data/vars",as.character(year),".rds"))
+ dictionary <- readRDS(paste0("data/vars",as.character(year),".rds"))
 ```
 
 
