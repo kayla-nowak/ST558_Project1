@@ -469,6 +469,9 @@ getPUMSData(geo=c("STA"))             #unapproved variable
 
 ### `summarizeCensusNums()`
 
+***make generic: summary.census***
+***add documentation***
+
 ```{r}
 summarizeCensusNums <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
 
@@ -550,7 +553,46 @@ test2_sum[2]
 test2_sum[3]
 ```
 
+### `plot.census()`
 
+***add documentation***
+***axis label wrapping option?***
+
+```{r}
+plot.census <- function(tdata, num, cat){
+  
+  ## CHECK INPUTS
+  if(is.null(num) | is.null(cat)){
+    stop("Invalid input. Exactly 1 NUM and 1 CAT must be specified.")
+  } else if(length(num) != 1 | length(cat) != 1){
+    stop("Invalid input. Exactly 1 NUM and 1 CAT must be specified.")
+  }
+  
+  num <- toupper(num)
+  cat <- toupper(cat)
+  if(!num %in% c("AGEP", "GASP", "GRPIP", "JWMNP")){
+    stop("Invalid NUM input. The variable is not on the approved list.")
+  } else if(!cat %in% c(all_cats, "YEAR")){
+    stop("Invalid CAT input. The variable is not on the approved list.")
+  }
+
+  ## PLOT
+  g <- ggplot(data=tdata,
+              aes(x=get(cat), y=get(num), weight=PWGTP, fill=get(cat)) )
+
+  g + geom_boxplot() +
+    labs(x=cat, y=num) +
+    scale_fill_discrete(name=cat) + 
+    theme_minimal()
+  
+}
+```
+
+Testing
+
+```{r}
+plot(test2, num="AGEP", cat="FER")
+```
 
 
 # Investigation
