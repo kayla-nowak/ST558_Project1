@@ -85,6 +85,7 @@ Called for all valid years.
 
 ```{r}
 #| eval: FALSE
+
 getPUMSVars(2021)
 getPUMSVars(2022)
 getPUMSVars(2023)
@@ -422,7 +423,7 @@ summary.census <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
   valid_cats <- c("YEAR", all_cats)
 
   #Refine pick_nums list
-  if (pick_nums=="ALL"){
+  if (length(pick_nums)==1 && pick_nums=="ALL"){
     pick_nums <- valid_nums
   } else if(all(!pick_nums %in% valid_nums)){
     stop("No valid inputs were provided for PICK_NUMS.")
@@ -433,7 +434,7 @@ summary.census <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
 
   
   #Refine pick_cats list
-  if (pick_cats=="ALL"){
+  if (length(pick_cats)==1 && pick_cats=="ALL"){
     pick_cats <- valid_cats
   } else if(all(!pick_cats %in% valid_cats)){
     stop("No valid inputs were provided for PICK_CATS.")
@@ -498,8 +499,6 @@ Numeric time (JWAP and JWDP), the weighting factor (PWGTP), and levels of geogra
 -   Input: a census-class tibble, 1 numeric variable of interest, 1 categorical variables of interest
 -   Return: a vertical, grouped box plot
 
-***axis label wrapping option?***
-
 ```{r}
 plot.census <- function(tdata, num, cat){
   
@@ -510,12 +509,20 @@ plot.census <- function(tdata, num, cat){
     stop("Invalid input. Exactly 1 NUM and 1 CAT must be specified.")
   }
   
+  #num validity
   num <- toupper(num)
-  cat <- toupper(cat)
   if(!num %in% c("AGEP", "GASP", "GRPIP", "JWMNP")){
     stop("Invalid NUM input. The variable is not on the approved list.")
-  } else if(!cat %in% c(all_cats, "YEAR")){
+  } else if (!num %in% names(tdata)){
+    stop("Invalid NUM input. The variable is not on the dataset.")
+  }
+  
+  #cat validity
+  cat <- toupper(cat)
+  if(!cat %in% c(all_cats, "YEAR")){
     stop("Invalid CAT input. The variable is not on the approved list.")
+  } else if (!cat %in% names(tdata)){
+    stop("Invalid CAT input. The variable is not on the dataset.")
   }
   
   ## SUBTITLE PREP: 
@@ -554,7 +561,7 @@ plot.census <- function(tdata, num, cat){
 
 ## Correct Usage
 
-Example function applications: default settings.
+Example applications: default settings.
 
 ```{r}
 
@@ -570,38 +577,22 @@ plot(default, num="AGEP", cat="SEX")
 
 ```
 
-Example function applications: multi-year data.
+Example applications: multi-year data.
 
 ```{r}
-#| eval: FALSE
 
 #API Data Pull
 test <- getPUMSData(years=c(2021,2022), nums= c("AGEP", "JWAP"), geo="DIVISION")
 str(test)
 
-#Summary
-summary(test)
+#Summary: note silent drop of JWAP (time) and SCHL (not on dataset)
+summary(test, pick_cats=c("SEX", "YEAR", "SCHL"))
 
 #Graphics (AGEP x YEAR)
 plot(test, num="AGEP", cat="YEAR")
 
 ```
 
-Example function applications: all covariates
-
-```{r}
-#| eval: FALSE
-
-#API Data Pull
-test <- getPUMSData(nums=all_nums, cats=call_cats, geo="REGION", subgeo="2")
-str(test)
-
-#Summary
-summary(test)
-
-#Graphics ( x )
-plot(test, num="", cat="")
-```
 
 ## Incorrect Usage
 
@@ -615,16 +606,13 @@ getPUMSVars(2020)           #invalid year
 For `getPUMSData`:
 
 ```{r}
-#| eval: false
 #| error: true
 
 #Invalid Nums
-getPUMSData(num=c("AGEP", "GASP"))  #too many inputs
 getPUMSData(num=c("PWGTP"))         #too few inputs
 getPUMSData(num=c("STATE"))         #unapproved variable
 
 #Invalid Cats
-getPUMSData(cat=c("SEX","FER"))     #too many inputs
 getPUMSData(cat=c("STATE"))         #unapproved variable
 
 #Invalid Geo
@@ -643,12 +631,35 @@ getPUMSData(geo=c("STA"))             #unapproved variable
 For `summary.census`:
 
 ```{r}
+#| error: true
+
+#at least 1 number and 1 categorical variable must be requested
+summary(default, pick_cats=NULL)
+
+#no valid requests (pick_nums and pick_cats argument order is flipped)
+summary(default, "SEX", "AGEP")
+
+#Note that "ALL" is ignored when combined with another request
+summary(default, pick_nums=c("ALL", "AGEP"))
 
 ```
 
 For `plot.census`:
 
 ```{r}
+#| error: true
+
+#num and cat must be user-supplied, no default settings
+plot(default)
+
+#num and cat only accept 1 variable each
+plot(default, num=c("AGEP", "GASP"), cat=c("SEX", "YEAR"))
+
+#invalid num request (time is not on approved list)
+plot(default, num="JWAP", cat="YEAR")
+
+#invalid cat input (approved variable, but not on dataset)
+plot(default, num="AGEP", cat="FER")
 
 ```
 
