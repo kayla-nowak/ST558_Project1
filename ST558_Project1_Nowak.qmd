@@ -450,13 +450,16 @@ summary.census <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
     summarize(across(where(is.numeric),
                      .fns = list("mean" = ~ (sum(.x*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE))),
                      .names = "{.col}")) |>
+    select(-PWGTP) |>
     pivot_longer(cols=everything(), names_to = "Variable", values_to="mean")
   
   just_sd <- tdata |>
     select(PWGTP, any_of(pick_nums)) |>
     summarize(across(where(is.numeric),
-                     .fns = list("sd"   = ~ sd(.x, na.rm=TRUE)),
+                     .fns = list("sd" = ~ (sqrt(sum(.x**2*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE)
+                                                - (sum(.x*PWGTP, na.rm=TRUE)/sum(PWGTP, na.rm=TRUE))**2))),
                      .names = "{.col}")) |>
+    select(-PWGTP) |>
     pivot_longer(cols=everything(), names_to = "Variable", values_to="sd") 
   
   
@@ -541,8 +544,7 @@ default <- getPUMSData()
 str(default)
 
 #Summary
-default_sum <- summary(default)
-default_sum
+summary(default)
 
 #Graphics (AGEP x SEX)
 plot(default, num="AGEP", cat="SEX")
@@ -559,8 +561,7 @@ test <- getPUMSData(years=c(2021,2022), nums= c("AGEP", "JWAP"), geo="DIVISION")
 str(test)
 
 #Summary
-test_sum <- summary(test)
-test_sum
+summary(test)
 
 #Graphics (AGEP x YEAR)
 plot(test, num="AGEP", cat="YEAR")
@@ -577,7 +578,7 @@ test <- getPUMSData(nums=all_nums, cats=call_cats, geo="REGION", subgeo="2")
 str(test)
 
 #Summary
-test_sum <- summary(test)
+summary(test)
 
 #Graphics ( x )
 plot(test, num="", cat="")
