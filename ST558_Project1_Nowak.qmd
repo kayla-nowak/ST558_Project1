@@ -518,13 +518,33 @@ plot.census <- function(tdata, num, cat){
   } else if(!cat %in% c(all_cats, "YEAR")){
     stop("Invalid CAT input. The variable is not on the approved list.")
   }
+  
+  ## SUBTITLE PREP: 
+  
+  # years present in data
+  which_years <- tdata |> mutate(YEAR = as.character(YEAR)) |> select(YEAR) |> unique()
+  
+  years_phrase <- paste(which_years$YEAR, collapse=", ")
+
+  #top-level geography (rely on case sensitivity)
+  GEO <- setdiff(names(tdata),all_vars)  #YEAR will always be [2]
+  
+  #sub-level geography
+  which_geo <- tdata |> mutate(SUBGEO = as.character(get(GEO[1]))) |> select(SUBGEO) |> unique()
+  
+  geo_phrase <- ifelse(nrow(which_geo)==1,
+                       paste0(GEO[1], ": ", which_geo$SUBGEO),
+                       paste0(GEO[1], " (combined)") )
+
 
   ## PLOT
   g <- ggplot(data=tdata,
               aes(x=get(cat), y=get(num), weight=PWGTP, fill=get(cat)) )
 
   g + geom_boxplot() +
-    labs(x=cat, y=num) +
+    labs(x=cat, y=num,
+         title=paste0("Boxplot of ",num," by ", cat),
+         subtitle=paste0("For year(s) ", years_phrase, ", and ", geo_phrase, " geography")) +
     scale_fill_discrete(name=cat) + 
     theme_minimal()
   

@@ -636,17 +636,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(<span class="sc">!</span>cat <span class="sc">%in%</span> <span class="fu">c</span>(all_cats, <span class="st">"YEAR"</span>)){</span>
 <span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid CAT input. The variable is not on the approved list."</span>)</span>
 <span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="do">## PLOT</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>tdata,</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">x=</span><span class="fu">get</span>(cat), <span class="at">y=</span><span class="fu">get</span>(num), <span class="at">weight=</span>PWGTP, <span class="at">fill=</span><span class="fu">get</span>(cat)) )</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  g <span class="sc">+</span> <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span>cat, <span class="at">y=</span>num) <span class="sc">+</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_discrete</span>(<span class="at">name=</span>cat) <span class="sc">+</span> </span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="do">## SUBTITLE PREP: </span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># years present in data</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  which_years <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">YEAR =</span> <span class="fu">as.character</span>(YEAR)) <span class="sc">|&gt;</span> <span class="fu">select</span>(YEAR) <span class="sc">|&gt;</span> <span class="fu">unique</span>()</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  years_phrase <span class="ot">&lt;-</span> <span class="fu">paste</span>(which_years<span class="sc">$</span>YEAR, <span class="at">collapse=</span><span class="st">", "</span>)</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">#top-level geography (rely on case sensitivity)</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  GEO <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(tdata),all_vars)  <span class="co">#YEAR will always be [2]</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#sub-level geography</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  which_geo <span class="ot">&lt;-</span> tdata <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">SUBGEO =</span> <span class="fu">as.character</span>(<span class="fu">get</span>(GEO[<span class="dv">1</span>]))) <span class="sc">|&gt;</span> <span class="fu">select</span>(SUBGEO) <span class="sc">|&gt;</span> <span class="fu">unique</span>()</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>  geo_phrase <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">nrow</span>(which_geo)<span class="sc">==</span><span class="dv">1</span>,</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">paste0</span>(GEO[<span class="dv">1</span>], <span class="st">": "</span>, which_geo<span class="sc">$</span>SUBGEO),</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">paste0</span>(GEO[<span class="dv">1</span>], <span class="st">" (combined)"</span>) )</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="do">## PLOT</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>tdata,</span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">x=</span><span class="fu">get</span>(cat), <span class="at">y=</span><span class="fu">get</span>(num), <span class="at">weight=</span>PWGTP, <span class="at">fill=</span><span class="fu">get</span>(cat)) )</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>  g <span class="sc">+</span> <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span>cat, <span class="at">y=</span>num,</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>         <span class="at">title=</span><span class="fu">paste0</span>(<span class="st">"Boxplot of "</span>,num,<span class="st">" by "</span>, cat),</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>         <span class="at">subtitle=</span><span class="fu">paste0</span>(<span class="st">"For year(s) "</span>, years_phrase, <span class="st">", and "</span>, geo_phrase, <span class="st">" geography"</span>)) <span class="sc">+</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_discrete</span>(<span class="at">name=</span>cat) <span class="sc">+</span> </span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -664,9 +684,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(default)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>census [6,547 × 5] (S3: census/tbl_df/tbl/data.frame)
- $ SEX  : Factor w/ 2 levels "Male","Female": 2 2 2 2 2 2 2 1 1 2 ...
- $ PWGTP: num [1:6547] 117 171 44 69 98 105 28 24 64 106 ...
- $ AGEP : num [1:6547] 90 56 81 78 62 78 73 74 54 56 ...
+ $ SEX  : Factor w/ 2 levels "Male","Female": 2 1 1 2 1 1 2 2 1 1 ...
+ $ PWGTP: num [1:6547] 83 147 73 69 126 20 77 48 106 101 ...
+ $ AGEP : num [1:6547] 18 20 19 19 94 90 20 18 66 30 ...
  $ state: Factor w/ 52 levels "Tennessee/TN",..: 37 37 37 37 37 37 37 37 37 37 ...
  $ YEAR : Factor w/ 4 levels "2021","2022",..: 4 4 4 4 4 4 4 4 4 4 ...</code></pre>
 </div>
