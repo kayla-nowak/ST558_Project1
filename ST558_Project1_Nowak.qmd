@@ -593,7 +593,6 @@ plot(test, num="AGEP", cat="YEAR")
 
 ```
 
-
 ## Incorrect Usage
 
 For `getPUMSVars`:
@@ -665,8 +664,51 @@ plot(default, num="AGEP", cat="FER")
 
 # Investigation
 
-**Topic**
+For example, consider an exploratory data analysis of age distributions for individuals who recently gave birth in Hawaii.
 
-**Results**
+The primary parameters of interest are:
 
-**Discussion**
+-   `years` = 2024 (the most recent year of PUMS data)
+-   `num` = AGEP (Age)
+-   `cat` = FER (Gave birth to child within the past 12 months)
+-   `geo` = STATE
+-   `subgeo` = 15 (Hawaii/HI)
+
+The FER variable is coded NA for males and certain age group. To aid in discussion, SEX is also requested from the query.
+
+**Pull data:**
+
+```{r}
+#cat and subgeo need to be specified, the rest are defaults
+investigation <- getPUMSData(cats=c("SEX", "FER"), subgeo="15")
+str(investigation)
+```
+
+**Basic numeric summaries:**
+
+```{r}
+summary(investigation)
+```
+
+In 2024, the American Communities Survey recorded 1,446,146 (\~1.45 million) individuals living in the state of Hawaii. This includes roughly 726,045 males and 720,101 females. The average age was 41.7 years (SD = 24.1).
+
+Among the 720,101 females, 18,962 gave birth within the past 12 months of census, and 311,057 did not give birth. Note that the birth variable (FER) automatically excludes individuals less than 15 years old, greater than 50 years old, and individuals reporting male sex.
+
+**Basic plot:**
+
+```{r}
+plot(investigation, num="AGEP", cat="FER")
+```
+
+The basic box plot includes the N/A category. Since the pulled data is returned as a tibble, the N/A category can be excluded with a simple chaining step.
+
+```{r}
+plot(investigation |> filter(FER %in% c("Yes","No")),
+     num="AGEP", cat="FER")
+```
+
+This revised plot is better focused on the distributions of interest. Now we see age distributions for the 330,019 individuals in Hawaii who were eligible to answer this question (i.e., females aged 15 to 50).
+
+Most of the women who gave birth the the past 12 months were in their late-20's to mid-30's. Few women under 20 years old gave birth, and *very* few women at 50 years old gave birth.
+
+The women who did not give birth have a reasonably balanced age distribution, which is expected for large, census-based data.
