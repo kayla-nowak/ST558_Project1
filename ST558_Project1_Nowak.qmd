@@ -273,10 +273,20 @@ Within the main wrapper function (`getPUMSData`, defined later), this helper fun
 ```{r}
 getOneYear <- function(year, nums, cats, geo, subgeo,...){
 
-  ## LOAD DICTIONARY
+  ## Load dictionary
   dictionary <- readRDS(paste0("data/vars",as.character(year),".rds"))
   
-  ##-----more to add re: subgeo
+  ## Check subgeo level
+  geod <- ifelse(geo=="STATE" & year %in% c(2021,2022), "ST", geo)
+  lookup <- unlist(dictionary[[geod]]$values$item)
+  
+  check <- ifelse(geo=="STATE", 
+                  stringr::str_pad(as.character(subgeo), 2, pad="0"),
+                  as.character(subgeo) )
+  
+  if(!check %in% names(lookup)){
+    stop(paste0("Invalid SUBGEO input. Level ",check," is not valid for ", geo, " geography."))
+  }
   
   ## RUN API PULL FUNCTION
   parsed <- queryAPI(year, nums, cats, geo, subgeo)
@@ -289,7 +299,7 @@ getOneYear <- function(year, nums, cats, geo, subgeo,...){
   tdata <- cleanNum(tdata,dictionary,nums)
   tdata <- cleanGeo(tdata,dictionary,geo,year)
   
-    #Add year as a variable
+  #Add year as a variable
   tdata <- tdata |> mutate(YEAR=factor(year, levels=c(2021, 2022, 2023, 2024)))
   
   #Assign class
@@ -462,7 +472,6 @@ summary.census <- function(tdata, pick_nums="ALL", pick_cats="ALL"){
     select(-PWGTP) |>
     pivot_longer(cols=everything(), names_to = "Variable", values_to="sd") 
   
-  
   element_meansd <- full_join(just_means, just_sd, by="Variable")
   
   
@@ -566,8 +575,10 @@ Example applications: default settings.
 ```{r}
 
 #API Data Pull
-default <- getPUMSData()   
-str(default)
+default <- getPUMSData() 
+
+str(default)  #note structure with tibble size and class
+head(default) #preview of formatted data
 
 #Summary
 summary(default)
@@ -583,7 +594,9 @@ Example applications: multi-year data.
 
 #API Data Pull
 test <- getPUMSData(years=c(2021,2022), nums= c("AGEP", "JWAP"), geo="DIVISION")
-str(test)
+
+str(test) #note structure with tibble size and class
+head(na.omit(test))  #preview of formatted data
 
 #Summary: note silent drop of JWAP (time) and SCHL (not on dataset)
 summary(test, pick_cats=c("SEX", "YEAR", "SCHL"))
@@ -619,11 +632,8 @@ getPUMSData(geo=c("STATE","REGION"))  #too many inputs
 getPUMSData(geo=c("STA"))             #unapproved variable
 
 #Invalid Subgeo
-#getPUMSData(geo="STATE", subgeo="1")      #state codes are two digits -- jk this works :)
-#getPUMSData(geo="STATE", subgeo="Texas")  #crashes at parse -- TRY TO FIX
-#getPUMSData(geo="DIVISION", subgeo="22")  #crasehs at parse -- TRY to FIX
-
-#getPUMSData(geo="STATE", subgeo="Texas/TX")  #should work
+getPUMSData(geo="DIVISION", subgeo="22")  #no level 22 for DIVISION
+getPUMSData(subgeo="Texas")               #must use numeric codes
 
 ```
 
